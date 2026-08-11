@@ -1,0 +1,35 @@
+
+# Ignore vscode AI rules
+.github/instructions/codacy.instructions.md
+
+# Data — never commit (keep the repo small)
+data/raw/
+data/processed/
+*.parquet
+
+# Results: keep summary tables, skip bulk artifacts
+results/*.pkl
+results/*.joblib
+
+# Model artifacts
+checkpoints/
+*.pt
+*.ckpt
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+
+# Secrets — for later (TimeGPT API key etc.)
+.env
+
+# IDE / OS
+.idea/
+.DS_Store
+Thumbs.db
+
+# VS Code — but keep shared settings
+.vscode/*
+!.vscode/settings.json
