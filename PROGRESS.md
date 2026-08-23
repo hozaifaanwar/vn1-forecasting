@@ -22,8 +22,25 @@ Forecasting with Python*.
     (2,559,010 rows; dtype preserved).
   - Basic sparsity / zero-rate analysis completed.
 
-### Current — Week 1 Session 3
-Zero-structure EDA + first scored baseline.
+- [DONE] Week 1 Session 3 — zero-structure EDA + first scored baseline:
+  - Per-series zero table (mean_sales, zero_rate, weeks) confirms CONTEXT
+    facts exactly (mean 0.718, median 0.835, max 0.9941).
+  - Dead-series check: 0 series with zero_rate == 1.0, as expected.
+  - Lifecycle split of zero-rows: leading (pre-launch) 1,139,262 / trailing
+    (discontinued) 230,029 / interior (intermittent) 467,146. Sums to
+    1,836,437, matching Session 2's pre-ffill price-NaN count exactly
+    (price is NaN precisely on zero-sales weeks) — good cross-check.
+  - Local 13-week holdout built (train 157 wks: 2020-07-06 -> 2023-07-03;
+    test 13 wks: 2023-07-10 -> 2023-10-02).
+  - **MA12 baseline score (official VN1 metric): 0.5163** — first number
+    to beat.
+  - Notebook: notebooks/03_session3.ipynb.
+  - Known issue: matplotlib patch rendering (ax.bar/ax.hist/ax.add_patch/
+    savefig) crashes the kernel in the vn1 env (matplotlib 3.11.1 + numpy
+    2.4.6 + freetype 2.14.3, conda-forge builds). Plain line plots
+    (ax.plot) work. Worked around with a text-based bucketed distribution
+    instead of a histogram. Not yet fixed — revisit when plotting is
+    actually needed (e.g. residual/forecast plots).
 
 ---
 
@@ -43,29 +60,21 @@ expanding windows, then remaining Chapter 2 concepts.
 
 ## Current benchmark
 MA12 — mean of the latest 12 historical weeks per series, repeated as a
-flat forecast across the 13-week horizon. A project benchmark (not an
+flat forecast across the 13-week horizon. Scored on the real 13-week
+holdout with the official metric: **0.5163**. A project benchmark (not an
 official rule) that later models must beat.
 
 ---
 
 ## Next VN1 work
 
-### Immediate — Session 3 (both parts)
-1. Build the per-series zero table: mean_sales, zero_rate, weeks per
-   series. Promote the prototype already in notebooks/01_practice.ipynb.
-2. Sanity-check against CONTEXT facts: expect 0 dead series
-   (zero_rate == 1.0; verified — every series has >=1 sale, max
-   zero_rate = 0.9941).
-3. Classify each series' zeros into four categories via first & last
-   positive-sales week: leading/pre-launch, trailing/discontinued,
-   interior/intermittent, always-zero.
-4. Build & verify the local 13-week validation setup.
-5. Score MA12 with the official metric on the holdout; record the number.
-
-### After Session 3
-6. Targeted EDA of active vs intermittent series.
-7. Create forecasting features (Week 3).
-8. Train the first global ML model (LightGBM); compare against MA12.
+### Immediate — Week 1 Session 4
+1. Targeted EDA of active vs intermittent series (use the lifecycle split
+   from Session 3 to compare behavior across segments).
+2. Create forecasting features (lags, rolling windows with shift(1) first
+   to avoid leakage, calendar features).
+3. Train the first global ML model (LightGBM); compare against the MA12
+   baseline (0.5163) on the same 13-week holdout.
 
 ---
 
@@ -87,9 +96,9 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-Session 3 — build the per-series zero table (promote from
-01_practice.ipynb), then score MA12 on vn1_long.parquet with the official
-metric and record the baseline number.
+Session 4 — targeted EDA of active vs intermittent series, then build
+lag/rolling features (shift(1) before rolling) and train the first global
+LightGBM model against the MA12 baseline (0.5163).
 
 ## Session-end rule
 End every session by updating this file: what got done, the latest score,
