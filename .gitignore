@@ -7,6 +7,9 @@ data/raw/
 data/processed/
 *.parquet
 
+# Reference books — large, copyrighted, not ours to distribute
+references/
+
 # Results: keep summary tables, skip bulk artifacts
 results/*.pkl
 results/*.joblib
