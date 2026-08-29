@@ -78,6 +78,16 @@ score = (total absolute error + absolute total bias) / total actual demand
 
 Lower is better. The metric penalizes both individual forecast error and systematic aggregate bias. For VN1, the official competition metric is the final optimization target, even when textbook forecasting KPIs suggest additional useful diagnostics.
 
+**[VERIFIED]** `data/raw/Functions for participants/Functions for participants.py` (gitignored, part of the original competition download, not committed) is the organizers' own reference scoring/dummy-submission code. Confirmed directly against it: `src/metrics.py::vn1_score` is formula-identical to their `score = (abs_err + abs(err)) / objective.sum().sum()`, and `src/backtest.py::ma12_forecast`'s default window matches their own MA12 reference submission exactly.
+
+## Competition phases and current data status
+
+**[VERIFIED]** The real competition had three stages: Phase 0 (historical, given) → forecast Phase 1 (13 weeks) → Phase 1 actuals released → forecast Phase 2 (13 weeks, training on Phase 0+Phase 1 combined) → competition ends, no further leaderboard feedback.
+
+**[VERIFIED]** `data/raw/` currently contains only `Phase_0_Sales.csv` and `Phase_0_Price.csv` (the 170 historical weeks this project already uses) plus `Submission Phase 1 - Random-3.csv` — confirmed by direct inspection to be a placeholder/template submission (dates 2023-10-09 to 2024-01-01, small-integer filler values), not real Phase 1 demand. **No Phase 1 or Phase 2 actual sales/price files are present.** Everything scored so far (MA12, the baseline suite, LightGBM) is a local backtest inside Phase 0 (train on its first 157 weeks, test on its final 13), not a score against real post-Phase-0 competition data.
+
+**[DECISION]** If/when real Phase 1 actuals are added: freeze the full modeling pipeline (features, objective, hyperparameters, clipping) using Phase 0-only validation first, generate and commit the Phase 1 forecast, and only then load the actuals to score — never let them influence the frozen forecast. See DECISIONS.md D008, which this directly extends.
+
 ## Benchmark
 
 **[DECISION]** Initial baseline = MA12.

@@ -144,18 +144,18 @@ Forecasting with Python*.
     was right, just reached the wrong way. `random_state=42` and full
     `LGBMRegressor` params now recorded for reproducibility
     (lightgbm 4.7.0).
-  - **LightGBM score (official VN1 metric): 0.4989** — a genuinely honest
-    single look at the holdout with the internally-selected model,
-    labeled a *development-holdout* result rather than a pristine one
-    (the holdout was already inspected during the flawed first pass's
-    3-way comparison — see D008). This is worse than the first pass's
+  - **LightGBM score (official VN1 metric): 0.4989.** Because the final
+    holdout influenced earlier development (the flawed first pass's
+    3-way objective comparison scored directly against it — see D008),
+    **0.4989 is a development-holdout result, not a fully untouched
+    estimate of generalization.** It is worse than the first pass's
     0.4955, exactly as expected once selection bias is removed. **Revised
-    headline: LightGBM (0.4989) is essentially tied with MA4 (0.4987),
-    not conclusively better than it** — the earlier "beats the whole
-    suite" claim doesn't survive the correction. Breakdown: total_actual
-    3,508,827, total_predicted 3,423,361, signed_bias +85,466 (~2.4% net
-    under-forecast — still tighter than MA12's own +154,579), abs_error_
-    sum 1,665,184.
+    headline: LightGBM (0.4989) is essentially tied with MA4 (0.4987) —
+    it has not demonstrated reliable forecast value yet**, and the
+    earlier "beats the whole suite" claim doesn't survive the correction.
+    Breakdown: total_actual 3,508,827, total_predicted 3,423,361,
+    signed_bias +85,466 (~2.4% net under-forecast — still tighter than
+    MA12's own +154,579), abs_error_sum 1,665,184.
   - Segment analysis, now properly quantified (not just a bare score —
     the official score is not a simple average of segment scores):
     active — 45.4% of demand, 34.9% of abs error, bias −61,726 (net
@@ -225,21 +225,28 @@ claims cautiously until independently re-verified.
 ## Next VN1 work
 
 ### Immediate — Week 1 Session 5
-1. The sparse segment (zero_rate>=0.9, 6,597 series, 10.6% of demand but
+1. **Rolling-origin (multi-window) internal validation, before anything
+   else.** The current internal validation set is only 3 origins — thin
+   enough that hyperparameter tuning against it risks chasing noise
+   rather than genuine improvement. This was flagged as deferred back in
+   Session 3/4 ("revisit once actually comparing candidate models, not
+   baselines") — that point has now arrived. Build this before tuning.
+2. The sparse segment (zero_rate>=0.9, 6,597 series, 10.6% of demand but
    21.6% of total abs error) scores far worse (1.2115) than active
    (0.4031) or intermittent (0.5065) — investigate whether a dedicated
    approach helps: a hurdle/two-stage model (classify zero-vs-nonzero,
    then regress the nonzero magnitude), a segment-specific model, or
    accepting this as an inherent property of very sparse demand and
    focusing effort elsewhere.
-2. Hyperparameter tuning of the current LightGBM (num_leaves, learning
+3. Hyperparameter tuning of the current LightGBM (num_leaves, learning
    rate, min_child_samples, n_estimators) — the first model used
-   reasonable-but-unturned defaults, and must be tuned against internal
-   validation only (D008), never the true holdout.
-3. Consider a denser origin sample (currently every 4 weeks, post-purge
+   reasonable-but-unturned defaults, and must be tuned against the
+   rolling-origin internal validation above (D008), never the true
+   holdout.
+4. Consider a denser origin sample (currently every 4 weeks, post-purge
    52-116) or an expanded lookback/rolling feature set, now that the
    pipeline and leakage tests exist to check any change safely.
-4. Longer-term: revisit D006 (recursive vs. direct) and D007 (Tweedie vs.
+5. Longer-term: revisit D006 (recursive vs. direct) and D007 (Tweedie vs.
    L2) if either the segment split or a richer feature set changes the
    picture — both were evidence-based calls on the *first* model, not
    permanent. D008 (purge discipline, never select on the true holdout)
