@@ -24,6 +24,7 @@ __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
 .venv/
+.pytest_cache/
 
 # Secrets — for later (TimeGPT API key etc.)
 .env

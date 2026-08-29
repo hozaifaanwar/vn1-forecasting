@@ -12,6 +12,7 @@ dependencies:
   - statsmodels
   - jupyter
   - ipykernel
+  - pytest
   - pip
   - pip:
       - statsforecast
