@@ -143,3 +143,37 @@ def purge_fit_origins(origins, val_origins, horizons):
     max_h = max(horizons)
     min_val = min(val_origins)
     return [o for o in origins if o + max_h < min_val]
+
+
+def rolling_origin_folds(origins, horizons, n_folds=3, val_size=None):
+    """Walk-forward internal validation folds: (fit_origins, val_origins) pairs
+    where each fold's validation block moves further forward in time and its
+    fit set is purged (purge_fit_origins) relative to that fold's own
+    validation start.
+
+    A single validation split (as used in Session 4's first model) is thin —
+    3 origins isn't enough to trust a hyperparameter or model-family decision
+    against. Averaging a score across several folds, each validating a
+    different, later slice of history, is a more robust internal signal
+    without ever touching the true final holdout.
+
+    `origins` must be sorted ascending. `val_size` defaults to roughly
+    `len(origins) // (n_folds + 1)` so each fold's fit set can still grow.
+    Folds with an empty fit set after purging are dropped (too little
+    history for that fold's lookback + horizon requirements).
+    """
+    origins = sorted(origins)
+    if val_size is None:
+        val_size = max(1, len(origins) // (n_folds + 1))
+
+    folds = []
+    for k in range(n_folds):
+        end = len(origins) - (n_folds - 1 - k) * val_size
+        start = end - val_size
+        if start < 0:
+            continue
+        val_origins = origins[start:end]
+        fit_origins = purge_fit_origins(origins[:start], val_origins, horizons)
+        if fit_origins:
+            folds.append((fit_origins, val_origins))
+    return folds

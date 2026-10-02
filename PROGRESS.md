@@ -184,6 +184,94 @@ Forecasting with Python*.
     selection, even once — only for a single final evaluation per major
     decision. Use purged internal validation for everything else.
 
+- [DONE] Week 1 Session 5 — rolling-origin CV, hyperparameter tuning,
+  sparse-segment investigation, LightGBM-vs-MA4 origin-level comparison
+  (DECISIONS.md D009/D010). **Went through three external review passes
+  before anything was committed — each caught a real, distinct problem.**
+  Pass 1: no rolling-origin MA4 comparison existed (the "clearly ahead"
+  claim rested on one development-holdout point). Pass 2: early stopping
+  used `eval_metric="l1"` instead of the VN1 score. Pass 3, the most
+  consequential: `eval_metric=vn1_lgb_eval` alone does NOT make early
+  stopping exclusive to that metric — LightGBM's own built-in metric for
+  the objective (e.g. "l2") stays registered alongside it unless
+  `metric="None"` + `first_metric_only=True` are also set. Fixing pass 3
+  changed several conclusions from passes 1-2, not just the headline
+  number — the numbers below are the final, three-times-corrected ones.
+  - `src/features.py::rolling_origin_folds()` — 3 walk-forward, purged
+    validation folds, replacing Session 4's single 3-origin split.
+  - `src/metrics.py`: `vn1_score_by_group` (scores a group, e.g. a
+    rolling-CV origin, separately rather than pooling — pooling lets one
+    group's bias cancel another's); `vn1_lgb_eval` (custom LightGBM eval
+    computing the real VN1 score); `make_vn1_origin_mean_eval` (a factory
+    building an eval function that early-stops on the MEAN of per-origin
+    scores, not one score pooled across a multi-origin validation set —
+    closing the same bias-cancellation gap during early stopping itself,
+    not just at model-selection time).
+  - `src/models/lightgbm_model.py::train_lgbm()` — new, centralizes
+    correct LightGBM training: `metric="None"`, `first_metric_only=True`,
+    asserts `evals_result_` tracked exactly the intended metric. Built
+    specifically so the pass-3 bug (verified directly: without this,
+    `evals_result_` contained both `"l2"` and `"vn1_score"`) can't be
+    silently reintroduced at a future call site.
+  - 12 new tests across `test_metrics.py`/`test_models.py`, including one
+    that documents the bug directly (asserts `"l2"` IS present without
+    the fix) and one confirming the fix (asserts only the intended metric
+    is tracked). Full suite: 46/46 passing.
+  - **Objective**: regression (mean-of-origin 0.5510) vs. tweedie (0.5490)
+    — **nearly tied**, not the large gap earlier passes reported (as far
+    apart as 0.55 vs 0.78 before the pass-3 fix). Origin-by-origin:
+    regression wins 9/15, tweedie 6/15, mean diff only -0.0020. Kept
+    `regression` — wins the origin-count comparison and is simpler — but
+    the earlier "clear win" framing does not survive correction.
+    `regression_l1` remains clearly worse (0.6503).
+  - **Hyperparameters**: `num_leaves=200` (0.5459) nominally beat `127`
+    (0.5482) but is the search-boundary value; origin-by-origin, 200
+    wins only 9/15, mean diff -0.0023 — practically tied. **Kept the
+    simpler `num_leaves=127`.**
+  - **Sparse-segment investigation**: dedicated sparse-only model 1.2929
+    vs. global model 1.2990 on the same sparse rows — **now nearly tied**,
+    not the clear negative result earlier passes reported (1.4694 vs
+    1.3952 before the pass-3 fix). **Decision unchanged in practice**
+    (kept one global model — the gap is too small to justify a second
+    model's complexity) but the earlier "clear negative result" claim
+    does not survive correction. (Scored at the fold-pooled level, not
+    re-verified origin-by-origin like the two comparisons above — a
+    known, minor gap in rigor, unlikely to change the conclusion given
+    how small the difference is.)
+  - **LightGBM vs. MA4, origin by origin, across all 15 rolling-CV
+    validation origins** (MA4 = each origin's own `roll_mean_4` feature):
+    LightGBM wins **8/15**, MA4 wins **7/15** (median diff -0.0006,
+    essentially even). Mean diff favors LightGBM (-0.0352), but a
+    **leave-one-out sensitivity check** shows most of that depends on one
+    origin (2022-12-19, a year-end forecast origin where MA4 performed
+    exceptionally poorly — MA4 scores 1.10 there, LightGBM 0.58;
+    seasonality is a plausible hypothesis, not established by this
+    comparison alone): excluding it, the mean diff nearly vanishes
+    (-0.0004). The one
+    **robust, consistent** advantage — confirmed with absolute/normalized
+    bias, not a signed mean that can hide cancellation across origins —
+    is bias control: mean |bias| 87,270 vs. MA4's 270,009 (~3.1x), mean
+    normalized |bias| (share of that origin's demand) 0.0286 vs. 0.0850
+    (~3.0x). Both models skew toward net under-forecasting (10/15 and
+    12/15 origins respectively) but LightGBM less consistently so.
+  - **Final development-holdout evaluation** (fully corrected config):
+    LightGBM **0.4996**, MA4 **0.4987** — **MA4 very slightly wins this
+    single point**, the opposite of the rolling-CV win-rate. Breakdown:
+    total_actual 3,508,827, total_predicted 3,467,481, signed_bias
+    +41,346 (~1.2% net under-forecast), abs_error_sum 1,711,494.
+  - **Honest conclusion (revised twice — "clearly ahead of MA4", then
+    "modest edge", now this):** evidence is mixed. LightGBM provides
+    substantial protection during one extreme period and controls
+    portfolio bias more tightly (a real, robustly-measured advantage),
+    but LightGBM wins slightly more origins while MA4 wins the
+    development-holdout point, and the two perform about as well as
+    each other at the median origin. Not proof of a reliable edge — a
+    real, narrow, concentrated
+    difference whose practical significance the actual Phase 1 result
+    will help settle.
+  - Notebook: notebooks/05_session5.ipynb, rewritten a third time after
+    the pass-3 correction and executed end-to-end for real.
+
 ---
 
 ## Learning progress
@@ -204,53 +292,91 @@ contaminate an unpurged internal split); the difference between "clean
 internal validation for selection" and "one honest look at a true holdout"
 — and how easy it is to blur that line without external review.
 
-### Next
-Expanding windows; per-segment/hurdle modeling for intermittent demand
-(ties directly into the sparse-segment open question above); LightGBM
-hyperparameter tuning fundamentals; remaining Chapter 2 concepts.
+Expanding windows; remaining Chapter 2 concepts.
+
+### Covered (Session 5)
+Rolling-origin (walk-forward) cross-validation for time series; scoring a
+hyperparameter search against a multi-fold mean instead of a single split;
+testing a segment-specialization hypothesis directly rather than assuming
+it; leave-one-out sensitivity as a way to check whether a mean advantage
+is real or driven by one outlier; absolute/normalized bias vs. signed
+bias (signed bias can hide within-model cancellation that absolute
+measures reveal); and a hard lesson in how an eval-metric implementation
+detail (a framework's own built-in metric silently riding alongside a
+custom one during early stopping) can distort several conclusions at
+once, not just the headline number — verified directly rather than
+assumed, three times, across three review passes.
 
 ---
 
 ## Current benchmark
-**LightGBM (direct multi-horizon, L2): 0.4989** — a development-holdout
-result (see DECISIONS.md D008), essentially tied with MA4 (0.4987), not
-conclusively better. MA12 (0.5163) stays tracked separately for external
-comparability (matches the real VN1 competition's own baseline). Later
-work must beat 0.4989 — and now that a full session's headline number has
-already been revised once by external review, treat "beats the baseline"
-claims cautiously until independently re-verified.
+No single number is "the" benchmark anymore — the evidence itself is
+mixed (DECISIONS.md D009, final version). On the development holdout
+(DECISIONS.md D008 — looked at across three sessions and three review
+passes of Session 5 alone): **MA4 0.4987 vs. LightGBM 0.4996** — MA4
+slightly wins this one point. On the 15-origin rolling-CV comparison:
+LightGBM wins 8/15 (vs. MA4's 7/15), with a real, robustly-measured
+advantage in bias control (~3x tighter), but most of its mean-score
+edge depends on a single extreme origin. MA12 (0.5163) stays tracked
+separately for external comparability. Whichever model is used going
+forward, treat "beats the baseline" claims as provisional until checked
+origin-by-origin — a single point (development holdout or otherwise)
+is not sufficient evidence on its own, as this session demonstrated
+three times over.
 
 ---
 
 ## Next VN1 work
 
-### Immediate — Week 1 Session 5
-1. **Rolling-origin (multi-window) internal validation, before anything
-   else.** The current internal validation set is only 3 origins — thin
-   enough that hyperparameter tuning against it risks chasing noise
-   rather than genuine improvement. This was flagged as deferred back in
-   Session 3/4 ("revisit once actually comparing candidate models, not
-   baselines") — that point has now arrived. Build this before tuning.
-2. The sparse segment (zero_rate>=0.9, 6,597 series, 10.6% of demand but
-   21.6% of total abs error) scores far worse (1.2115) than active
-   (0.4031) or intermittent (0.5065) — investigate whether a dedicated
-   approach helps: a hurdle/two-stage model (classify zero-vs-nonzero,
-   then regress the nonzero magnitude), a segment-specific model, or
-   accepting this as an inherent property of very sparse demand and
-   focusing effort elsewhere.
-3. Hyperparameter tuning of the current LightGBM (num_leaves, learning
-   rate, min_child_samples, n_estimators) — the first model used
-   reasonable-but-unturned defaults, and must be tuned against the
-   rolling-origin internal validation above (D008), never the true
-   holdout.
-4. Consider a denser origin sample (currently every 4 weeks, post-purge
-   52-116) or an expanded lookback/rolling feature set, now that the
-   pipeline and leakage tests exist to check any change safely.
-5. Longer-term: revisit D006 (recursive vs. direct) and D007 (Tweedie vs.
-   L2) if either the segment split or a richer feature set changes the
-   picture — both were evidence-based calls on the *first* model, not
-   permanent. D008 (purge discipline, never select on the true holdout)
-   is permanent and applies to all of the above.
+### Immediate — Week 1 Session 6: freeze and generate the Phase 1 forecast
+Per the agreed freeze-before-reveal protocol (CONTEXT.md's Phase section,
+extending D008): the modeling decisions are now settled (D006 direct
+multi-horizon, D007 regression objective, D009 tuned hyperparameters +
+no segment split, corrected methodology) via internal validation only.
+Real Phase 1 actuals have not been obtained or added yet — nothing here
+should wait on them.
+
+**One open judgment call worth deciding before freezing**: D009's final
+origin-level evidence shows LightGBM's edge over MA4 is close to a coin
+flip on win-rate (8/15 vs. 7/15), and MA4 actually wins the single
+development-holdout point (0.4987 vs. 0.4996). "The SupChains Way"
+reference (added this session) rates ensembling as A-tier — "nearly
+guaranteed to deliver better results." Given genuinely mixed single-model
+evidence — LightGBM's real advantage (tighter bias, resilience during
+one extreme period, wins slightly more origins) and MA4's real
+advantage (wins the holdout point) look complementary rather than one
+dominating — an
+ensemble of LightGBM + MA4 is a reasonable option to consider for the
+frozen Phase 1 forecast rather than picking one outright. This would be
+new scope: not yet built, and would need its own rolling-origin CV
+evaluation before being trusted (per D008/D010 — the same discipline
+that changed every other conclusion in this session). Decide explicitly
+rather than defaulting to LightGBM alone by inertia.
+
+1. Retrain the frozen configuration on **all 170 weeks of Phase 0**
+   (no holdout withheld this time — there's no more Phase 0 data to
+   reserve once forecasting into genuinely unknown territory).
+2. Generate the 13-week forecast for the real Phase 1 dates
+   (2023-10-09 -> 2024-01-01, matching the sample submission's format).
+3. Clip to >=0, validate against the submission format (no missing
+   values, correct KEY + date columns).
+4. Save and commit: the forecast file, full model params, feature list,
+   training cutoff (2023-10-02), generation timestamp, and the code
+   commit hash it was produced from.
+5. Do not open, request, or add real Phase 1 actuals until after this
+   frozen forecast is committed.
+
+### Longer-term (after the Phase 1 freeze, or in parallel on Phase 0 only)
+- Revisit D006 (recursive vs. direct) and D007 (Tweedie vs. L2) if a
+  richer feature set changes the picture — both were evidence-based
+  calls on early models, not permanent.
+- A two-stage hurdle model where *both* stages still train on all data
+  (not just sparse rows) remains untested — D009's negative result was
+  specific to naive segment-restricted training data, not every
+  possible segment-aware design.
+- Denser origin sampling or an expanded lookback/rolling feature set.
+- D008 (purge discipline, never select on the true holdout) is
+  permanent and applies to all future comparisons.
 
 ---
 
@@ -259,13 +385,18 @@ claims cautiously until independently re-verified.
   demand cannot be identified directly — VN1 has no inventory file.
 - Price behavior is inferred from transaction structure; revisit if better
   price information appears.
-- Best treatment of highly intermittent series is an empirical question to
-  settle through validation. Session 4 gave a first concrete answer:
-  the sparse segment (zero_rate>=0.9) scores 1.2115 vs. 0.40-0.51 for the
-  other two segments, and contributes 21.6% of total absolute error from
-  only 10.6% of demand — a real, evidence-based sign this deserves
-  dedicated treatment rather than being folded into one global model
-  as-is.
+- Best treatment of highly intermittent series is an empirical question,
+  and the answer so far runs counter to intuition. Session 4 found the
+  sparse segment (zero_rate>=0.9) scores far worse than the other two
+  segments and contributes 21.6% of total absolute error from only 10.6%
+  of demand — a real, evidence-based sign it's the hardest part of the
+  problem. But Session 5 directly tested "give it dedicated treatment"
+  (a model trained only on sparse rows) and found that made it *worse*,
+  not better (D009) — the global model's cross-series learning matters
+  more than segment specialization, at least for this simple version of
+  specialization. Still open: whether a *different* kind of segment-aware
+  design (e.g. a two-stage hurdle model where both stages still see all
+  data) would behave differently.
 
 ---
 
@@ -277,10 +408,13 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-Session 5 — investigate the sparse segment specifically (hurdle/two-stage
-model or segment-specific approach), and/or tune the current LightGBM's
-hyperparameters (against internal validation only, per D008), using the
-0.4989 direct-multi-horizon model as the baseline to beat.
+Session 6 — first decide explicitly (LightGBM alone, MA4 alone, or an
+ensemble, tested via rolling-origin CV per D008/D010) given D009's final
+mixed evidence, then retrain the frozen configuration on all 170 weeks
+of Phase 0, generate the real Phase 1 forecast (2023-10-09 to
+2024-01-01), and commit it with full provenance (params, feature list,
+training cutoff, commit hash, timestamp) — before requesting or opening
+any real Phase 1 actuals.
 
 ## Session-end rule
 End every session by updating this file: what got done, the latest score,

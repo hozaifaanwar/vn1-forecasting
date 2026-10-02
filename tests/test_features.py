@@ -7,6 +7,7 @@ from src.features import (
     build_direct_horizon_matrix,
     classify_segment,
     purge_fit_origins,
+    rolling_origin_folds,
     zero_rate_table,
 )
 
@@ -143,3 +144,39 @@ def test_purge_fit_origins_keeps_everything_when_already_disjoint():
     val_origins = [100]
     horizons = [1, 2, 3]
     assert purge_fit_origins(origins, val_origins, horizons) == origins
+
+
+def test_rolling_origin_folds_are_purged_and_move_forward():
+    origins = list(range(52, 144, 4))  # the actual Session 4/5 origin pool
+    horizons = list(range(1, 14))
+
+    folds = rolling_origin_folds(origins, horizons, n_folds=3)
+
+    assert len(folds) == 3
+    prev_val_end = -1
+    for fit_origins, val_origins in folds:
+        # purge guarantee holds independently in every fold
+        assert max(fit_origins) + max(horizons) < min(val_origins)
+        # each fold's validation block is strictly later than the previous
+        assert min(val_origins) > prev_val_end
+        prev_val_end = max(val_origins)
+        # fit set only ever contains origins that precede the validation block
+        assert all(o < min(val_origins) for o in fit_origins)
+
+
+def test_rolling_origin_folds_fit_sets_grow_across_folds():
+    origins = list(range(52, 144, 4))
+    horizons = list(range(1, 14))
+    folds = rolling_origin_folds(origins, horizons, n_folds=3)
+    fit_sizes = [len(fit) for fit, _ in folds]
+    assert fit_sizes == sorted(fit_sizes)  # non-decreasing: later folds see more history
+
+
+def test_rolling_origin_folds_drops_folds_with_no_valid_fit_origins():
+    # Too little history before the first validation block for any origin
+    # to survive purging -- that fold should be dropped, not crash.
+    origins = [52, 56, 60, 64, 68]
+    horizons = list(range(1, 14))
+    folds = rolling_origin_folds(origins, horizons, n_folds=3, val_size=1)
+    for fit_origins, _ in folds:
+        assert len(fit_origins) > 0

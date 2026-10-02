@@ -88,6 +88,8 @@ Lower is better. The metric penalizes both individual forecast error and systema
 
 **[DECISION]** If/when real Phase 1 actuals are added: freeze the full modeling pipeline (features, objective, hyperparameters, clipping) using Phase 0-only validation first, generate and commit the Phase 1 forecast, and only then load the actuals to score — never let them influence the frozen forecast. See DECISIONS.md D008, which this directly extends.
 
+**[DECISION]** Separately from the actuals themselves: do not use post-competition retrospective knowledge (e.g. `references/The SupChains Way for AI Agents.md`'s VN1 section, published Jan 2025 after VN1 closed) to shape the frozen Phase 1/Phase 2 model or strategy — only general, timeless practitioner knowledge that any 2024 competitor could have had. A fair "we beat the competition" comparison requires not knowing more than the competitors did. See DECISIONS.md D011.
+
 ## Benchmark
 
 **[DECISION]** Initial baseline = MA12.
@@ -207,9 +209,17 @@ Use for: inventory policies, reorder point, order-up-to policies, review periods
 
 Important connection: forecast horizon should eventually be related to lead time and review period. Forecast uncertainty should eventually feed inventory decisions rather than stopping at point forecasts.
 
+### Nicolas Vandeput — *The SupChains Way for AI Agents* (`references/The SupChains Way for AI Agents.md`)
+
+**SUPERSEDING reference — check this first when it conflicts with the three books above.** A living, regularly-updated compilation of Vandeput's Medium articles, explicitly ordered most-recent-first with the stated rule "if two sections pull in different directions, the more recent one takes precedence." Practitioner/competition-evidence tier, same as the other three Vandeput works, but current by construction in a way a fixed-publication-date book cannot be — treat its stance as the default over an older book's on any topic both cover.
+
+Also the only source in this project written by VN1's own creator, with a dedicated section retrospectively analyzing VN1 itself (winning approaches, what beat what, tooling, model tiers) — for VN1-specific claims, that section is closer to tier 1 (verified) than tier 2 (book-derived). One correction already surfaced by it: an earlier hedged claim in this project's conversation history, that VN1 evaluation might censor shortage weeks, is contradicted by Vandeput's own account that "the competition lacked inventory data to auto-flag shortages (fixed in VN2)" — the claim was never promoted into this file, so nothing to retract here, but treat it as settled false going forward.
+
+Directly relevant confirmations already cross-checked against this project's own results: rejecting per-segment/hurdle models (matches Session 5's D009 finding that a dedicated sparse-segment model underperformed the global model); rolling-origin/temporal cross-validation as competitors' key differentiating skill (matches Session 5's `rolling_origin_folds()`); LightGBM as the dominant competitive choice (matches D006/D007); no statistical outlier trimming (matches this project's D001-adjacent stance); Score = MAE% + \|Bias%\|, never MAPE (matches `vn1_score`, already verified against the organizers' own scoring script).
+
 ### Book integration rule
 
-Do not teach the four books independently chapter-by-chapter. Use Joseph & Tackes as the technical sequence. Bring Vandeput material into the lesson when it:
+Do not teach the four books (or the fifth, superseding SupChains Way resource) independently chapter-by-chapter. Use Joseph & Tackes as the technical sequence. Bring Vandeput material into the lesson when it:
 
 - clarifies the business objective,
 - improves a forecasting decision,
@@ -218,7 +228,7 @@ Do not teach the four books independently chapter-by-chapter. Use Joseph & Tacke
 - connects forecasting to inventory,
 - or improves interpretation of results.
 
-When sources disagree: explain the assumptions behind each position; do not silently choose one. For VN1 evaluation, the official competition rules/metric win. For operational supply-chain practice, explain whether a different method or KPI may be more appropriate.
+When sources disagree: explain the assumptions behind each position; do not silently choose one. For VN1 evaluation, the official competition rules/metric win. For operational supply-chain practice, explain whether a different method or KPI may be more appropriate. Between Vandeput sources specifically: The SupChains Way document wins over the three older books when they conflict, per its own "recency wins" rule.
 
 ## Learning principle
 
