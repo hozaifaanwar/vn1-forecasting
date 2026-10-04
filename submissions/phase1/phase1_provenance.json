@@ -1,0 +1,138 @@
+{
+  "generated_at_utc": "2026-10-04T09:10:28+00:00",
+  "code_commit": "df6efed2012cf44a0d3ac511276ae75a445b6481",
+  "training_cutoff": "2023-10-02",
+  "forecast_dates": [
+    "2023-10-09",
+    "2023-10-16",
+    "2023-10-23",
+    "2023-10-30",
+    "2023-11-06",
+    "2023-11-13",
+    "2023-11-20",
+    "2023-11-27",
+    "2023-12-04",
+    "2023-12-11",
+    "2023-12-18",
+    "2023-12-25",
+    "2024-01-01"
+  ],
+  "primary": "lgbm -> phase1_forecast.csv (DECISIONS.md D012)",
+  "secondaries": {
+    "phase1_secondary_blend.csv": "0.5 * LightGBM + 0.5 * MA4",
+    "phase1_secondary_ma4.csv": "mean of the last 4 Phase 0 weeks, flat"
+  },
+  "frozen_config": {
+    "objective": "regression",
+    "lgb_params": {
+      "n_estimators": 2000,
+      "learning_rate": 0.05,
+      "num_leaves": 127,
+      "min_child_samples": 50
+    },
+    "random_state": 42,
+    "stopping_rounds": 50,
+    "origin_start": 52,
+    "origin_step": 4,
+    "n_val_origins": 3,
+    "w_lgbm": 0.5,
+    "primary": "lgbm"
+  },
+  "forecast_origin_date": "2023-10-02",
+  "fit_origins": [
+    52,
+    56,
+    60,
+    64,
+    68,
+    72,
+    76,
+    80,
+    84,
+    88,
+    92,
+    96,
+    100,
+    104,
+    108,
+    112,
+    116,
+    120,
+    124,
+    128,
+    132
+  ],
+  "val_origins": [
+    148,
+    152,
+    156
+  ],
+  "best_iteration": 223,
+  "tracked_metric": [
+    "vn1_score_origin_mean"
+  ],
+  "feature_cols": [
+    "horizon",
+    "lag_1",
+    "lag_2",
+    "lag_3",
+    "lag_4",
+    "lag_8",
+    "lag_12",
+    "lag_26",
+    "lag_52",
+    "roll_mean_4",
+    "roll_mean_8",
+    "roll_mean_12",
+    "roll_mean_26",
+    "roll_std_12",
+    "zero_rate_12",
+    "price_at_origin",
+    "price_was_missing_at_origin",
+    "segment",
+    "target_month",
+    "target_week_sin",
+    "target_week_cos",
+    "target_quarter"
+  ],
+  "lgbm_params": {
+    "boosting_type": "gbdt",
+    "class_weight": null,
+    "colsample_bytree": 1.0,
+    "importance_type": "split",
+    "learning_rate": 0.05,
+    "max_depth": -1,
+    "min_child_samples": 50,
+    "min_child_weight": 0.001,
+    "min_split_gain": 0.0,
+    "n_estimators": 2000,
+    "n_jobs": null,
+    "num_leaves": 127,
+    "objective": "regression",
+    "random_state": 42,
+    "reg_alpha": 0.0,
+    "reg_lambda": 0.0,
+    "subsample": 1.0,
+    "subsample_for_bin": 200000,
+    "subsample_freq": 0,
+    "metric": "None",
+    "verbosity": -1
+  },
+  "lightgbm_version": "4.7.0",
+  "pandas_version": "2.3.3",
+  "input_sha256": {
+    "Phase_0_Sales.csv": "034f50f7338c08cf1bb6facf8c5b36290f3e74d2e69db83099702d2a52f6534a",
+    "Phase_0_Price.csv": "9035cce137a4ab27e3caae6c41d80be41f25adb79b9665a55f6cc56db02ebf3a"
+  },
+  "output_sha256": {
+    "phase1_forecast.csv": "e189fbe2cb6419bba07111c21436513803e57d363ffd90843e0c75f16c3925cc",
+    "phase1_secondary_blend.csv": "cfb347d98067bcce0dd0c764f553aaad102f61f42ecde3e0ee0192f85727bfbc",
+    "phase1_secondary_ma4.csv": "5d96e549bbaf0f2c79adfdef6158c12b6845ccf30e93149ba4f3ec0fba04b72a"
+  },
+  "forecast_totals": {
+    "lgbm": 4341144.867550074,
+    "blend": 3929912.808775037,
+    "ma4": 3518680.75,
+    "forecast": 4341144.867550074
+  }
+}

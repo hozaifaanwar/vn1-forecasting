@@ -4,13 +4,12 @@ Demand forecasting on the VN1 Forecasting Accuracy Challenge
 (Vandeput, DataSource.ai, 2024). Benchmarking baselines, gradient
 boosting, and time-series foundation models under one backtest harness.
 
-**Status:** Week 1, Session 5 — data pipeline, EDA, baseline suite, and a
-global LightGBM model tuned via rolling-origin cross-validation, scored
-on a real 13-week holdout with the official VN1 metric. Session 5 went
-through three rounds of external review before committing, each catching
-a real methodology gap — see [PROGRESS.md](PROGRESS.md) for current state
-and [DECISIONS.md](DECISIONS.md) for the reasoning behind key choices,
-including what changed between review passes and why.
+**Status:** Session 6. The Phase 1 forecast (13 weeks, 2023-10-09 to
+2024-01-01) is frozen and committed with full provenance in
+[submissions/phase1/](submissions/phase1/), *before* any Phase 1 actuals
+were obtained. It hasn't been scored against real Phase 1 demand yet. See
+[PROGRESS.md](PROGRESS.md) for current state and
+[DECISIONS.md](DECISIONS.md) for the reasoning behind each choice.
 
 ## Setup
 ```bash
@@ -18,40 +17,46 @@ conda env create -f environment.yml
 conda activate vn1
 ```
 
-## Results
-Official VN1 metric, scored on a 13-week development holdout (2023-07-10
-to 2023-10-02) — but read this table with real caution, see below:
+## Reproduce the Phase 1 forecast
+```bash
+python scripts/build_dataset.py        # raw CSVs -> data/processed/vn1_long.parquet
+python scripts/make_phase1_forecast.py # refuses to run with uncommitted code changes
+pytest tests/
+```
 
-| Model | Score |
-|---|---|
-| MA4 | 0.4987 |
-| LightGBM (direct multi-horizon, L2, tuned) | 0.4996 |
-| MA8 | 0.5114 |
-| MA12 (tracked benchmark) | 0.5163 |
-| naive-last | 0.5247 |
-| MA26 | 0.5618 |
-| seasonal-naive-52 | 1.0498 |
-| zero | 2.0000 |
+## Results so far
+All scores use the official VN1 metric, `(sum|error| + |sum error|) / sum(actual)`.
+Lower is better.
 
-**Evidence is mixed, not a clean win for either model.** On this single
-holdout point, MA4 edges out LightGBM. On a 15-origin rolling-CV
-comparison, LightGBM wins slightly more often (8/15 vs. 7/15) with a
-real, robustly-measured advantage in bias control (~3x tighter, using
-absolute not signed bias, which can hide cancellation) — but most of its
-mean-score edge over MA4 depends on a single extreme origin (a year-end
-forecast origin where MA4 performed exceptionally poorly — seasonality
-is a plausible hypothesis, not established by this comparison alone);
-excluding it, the advantage nearly vanishes. Neither model dominates.
+**Which model is best depends on the season of the forecast horizon.**
 
-This project's Session 5 went through three rounds of external review
-before committing anything, and each one caught a real, distinct
-problem: no rolling-origin baseline comparison existed at first; then
-early stopping used a proxy metric (L1) instead of the real one; then —
-most consequential — a custom LightGBM eval metric doesn't exclusively
-drive early stopping unless `metric="None"` is also set, which was
-silently letting LightGBM's own built-in metric influence model
-selection throughout. Fixing that changed multiple conclusions, not just
-the headline number (see DECISIONS.md D009/D010 and PROGRESS.md Session
-5 for the full, three-times-corrected account). Session 4 had its own
-earlier correction too: an initial 0.4955 was optimistic because the
-objective had been selected by peeking at the holdout.
+| Model | Rolling CV, all seasons (15 origins) | Season-matched Oct–Jan backtest (5 origins) | Development holdout, Jul–Oct |
+|---|---|---|---|
+| LightGBM (direct multi-horizon, tuned) | 0.5482 | **0.7127** | 0.4996 |
+| 50/50 LightGBM + MA4 blend | **0.5387** | 0.7536 | **0.4839** |
+| MA4 | 0.5834 | 0.8384 | 0.4987 |
+| MA12 (official benchmark) | — | — | 0.5163 |
+
+- **Averaged over all seasons, the blend is best.** It wins 11 of 15
+  rolling-CV origins against each of its two components.
+- **For an Oct–Jan horizon, LightGBM alone is best.** It wins all 5
+  backtests run at the same calendar point one year earlier. Phase 0
+  demand rises 26–37% in Oct–Jan every year, and a flat moving average
+  can't anticipate that, which drags the blend down with it.
+
+Phase 1 is Oct–Jan, so **LightGBM alone is the primary Phase 1
+forecast**, with the blend and MA4 frozen alongside as declared
+secondaries ([DECISIONS.md D012](DECISIONS.md)). The development holdout
+has been inspected since Session 3, so treat it as a development result,
+not a clean test. The real test is the frozen Phase 1 forecast.
+
+## Methodology guardrails
+Each guardrail came out of a real mistake, caught in review:
+- Purged rolling-origin validation. The final holdout is never used for
+  selection (D008).
+- LightGBM early stopping is driven only by the VN1 metric. A custom eval
+  metric alone doesn't guarantee that, because LightGBM's own built-in
+  metric keeps influencing early stopping until it is switched off (D010).
+- No post-competition outcome knowledge shapes a frozen forecast (D011).
+- Forecasts are frozen and committed with a code hash before actuals are
+  seen (D012).

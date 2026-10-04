@@ -272,6 +272,61 @@ Forecasting with Python*.
   - Notebook: notebooks/05_session5.ipynb, rewritten a third time after
     the pass-3 correction and executed end-to-end for real.
 
+- [DONE] Week 1 Session 6 — model choice settled, Phase 1 forecast frozen
+  and committed before any Phase 1 actuals were obtained (DECISIONS.md
+  D012).
+  - **All-season rolling CV** (Session 5's folds, 15 origins, decision
+    rule written before running): equal-weight LightGBM+MA4 blend
+    0.5387 vs. LightGBM 0.5482 (reproduces Session 5 exactly) vs. MA4
+    0.5834, mean of origins. Blend wins 11/15 origins against each; its
+    edge over LightGBM survives dropping its best origin (LOO −0.0043).
+    Cost: normalized |bias| 0.046 vs. LightGBM's 0.029. Per-fold early
+    stopping flatters LightGBM by at most ~0.004 where checkable. 75/25
+    weight (0.5366) reported as a diagnostic only, not selected.
+  - **Season-matched backtest** (the question Phase 1 actually poses):
+    the Phase 1 forecast showed LightGBM ~24% above MA4 for Oct–Jan, and
+    Phase 0 shows Oct–Jan demand 26–37% above the preceding 13 weeks in
+    every year. Re-running the exact frozen pipeline at origins
+    2022-09-19…2022-10-17: **LightGBM 0.7127, blend 0.7536, MA4 0.8384 —
+    LightGBM wins 5/5.** Blend under-forecasts by 14–20%, LightGBM by 4–10%.
+    Caveat: one season, only two distinct trained models — near one
+    strong data point. Post-hoc (prompted by inspecting the forecast),
+    and recorded as such in D012; Phase 0 data only, so not leakage.
+  - **Decision:** Phase 1 primary = LightGBM alone; blend and MA4 frozen
+    as declared secondaries. All three get scored once actuals arrive.
+  - **Development-holdout evaluation** of the frozen pipeline (run once,
+    after the all-season rule; Jul–Oct horizon): LightGBM 0.4996, MA4
+    0.4987 (both reproduce Session 5), **blend 0.4839**. Not used for any
+    choice (D008).
+  - `src/pipeline.py::frozen_forecast(df, forecast_origin)` — one code
+    path for the holdout evaluation, the season-matched backtest and the
+    real forecast; only the origin differs. Training origins are every 4th
+    week from 52 whose full target window ends at or before the forecast
+    origin; early stopping on the last 3 (purged). `FROZEN_CONFIG` holds
+    every choice, including `primary`. `to_submission()` writes the
+    official wide format in the organizers' row order.
+  - `build_direct_horizon_matrix(..., require_target=False)` builds
+    feature rows past the end of the data (NaN target, extrapolated
+    weekly target_date) — needed to forecast from the last Phase 0 week.
+  - `scripts/make_phase1_forecast.py` — refuses to run with uncommitted
+    src/ or scripts/ changes, so the recorded hash is really the code
+    that ran. Trained on all 170 weeks (fit origins 52–132, early-stop
+    origins 148/152/156, best_iteration 223). Outputs in
+    `submissions/phase1/`: `phase1_forecast.csv` (primary, LightGBM,
+    total 4,341,145), `phase1_secondary_blend.csv` (3,929,913),
+    `phase1_secondary_ma4.csv` (3,518,681), `phase1_provenance.json`
+    (code commit df6efed, config, feature list, best iteration, origins,
+    library versions, input/output SHA-256, UTC timestamp). All three
+    pass the organizers' scorer checks (index + columns equal the
+    official template's, no NaN, non-negative). Re-running the script
+    reproduces the totals exactly.
+  - 5 new tests (feature rows past the end match those built when
+    targets exist; corrupting everything after the forecast origin leaves
+    the forecast unchanged; blend/primary/MA4 arithmetic; origin-pool
+    labels never pass the origin; submission format + row order). Full
+    suite: 51/51 passing.
+  - Notebook: notebooks/06_session6.ipynb, executed end-to-end.
+
 ---
 
 ## Learning progress
@@ -307,64 +362,54 @@ custom one during early stopping) can distort several conclusions at
 once, not just the headline number — verified directly rather than
 assumed, three times, across three review passes.
 
+### Covered (Session 6)
+Forecast combination (equal-weight averaging, and why fixed weights are
+preferred to weights fitted on the same validation origins); pre-
+registering a decision rule before computing results; how an all-season
+average can hide the regime that matters for a specific horizon —
+seasonality, and why a flat moving average structurally misses a
+recurring Q4 rise; season-matched backtesting (validating at the same
+calendar point as the real forecast); bounding early-stopping optimism;
+freeze-before-reveal with provenance (commit hash, hashes, timestamp).
+
 ---
 
 ## Current benchmark
-No single number is "the" benchmark anymore — the evidence itself is
-mixed (DECISIONS.md D009, final version). On the development holdout
-(DECISIONS.md D008 — looked at across three sessions and three review
-passes of Session 5 alone): **MA4 0.4987 vs. LightGBM 0.4996** — MA4
-slightly wins this one point. On the 15-origin rolling-CV comparison:
-LightGBM wins 8/15 (vs. MA4's 7/15), with a real, robustly-measured
-advantage in bias control (~3x tighter), but most of its mean-score
-edge depends on a single extreme origin. MA12 (0.5163) stays tracked
-separately for external comparability. Whichever model is used going
-forward, treat "beats the baseline" claims as provisional until checked
-origin-by-origin — a single point (development holdout or otherwise)
-is not sufficient evidence on its own, as this session demonstrated
-three times over.
+Development holdout (Jul–Oct horizon; already inspected many times, so a
+development result, not a pristine one): **blend 0.4839**, MA4 0.4987,
+LightGBM 0.4996, MA12 0.5163 (tracked for external comparability).
+All-season rolling CV (15 origins, mean): blend 0.5387, LightGBM 0.5482,
+MA4 0.5834. Season-matched Oct–Jan backtest (5 origins, mean): **LightGBM
+0.7127**, blend 0.7536, MA4 0.8384. Which model is "best" depends on the
+horizon's season (D012). The real test is the frozen Phase 1 forecast,
+not yet scored.
 
 ---
 
 ## Next VN1 work
 
-### Immediate — Week 1 Session 6: freeze and generate the Phase 1 forecast
-Per the agreed freeze-before-reveal protocol (CONTEXT.md's Phase section,
-extending D008): the modeling decisions are now settled (D006 direct
-multi-horizon, D007 regression objective, D009 tuned hyperparameters +
-no segment split, corrected methodology) via internal validation only.
-Real Phase 1 actuals have not been obtained or added yet — nothing here
-should wait on them.
+### Immediate — Session 7: score the frozen Phase 1 forecasts
+The Phase 1 forecast (LightGBM primary + blend and MA4 secondaries) is
+frozen and committed (D012). Next:
 
-**One open judgment call worth deciding before freezing**: D009's final
-origin-level evidence shows LightGBM's edge over MA4 is close to a coin
-flip on win-rate (8/15 vs. 7/15), and MA4 actually wins the single
-development-holdout point (0.4987 vs. 0.4996). "The SupChains Way"
-reference (added this session) rates ensembling as A-tier — "nearly
-guaranteed to deliver better results." Given genuinely mixed single-model
-evidence — LightGBM's real advantage (tighter bias, resilience during
-one extreme period, wins slightly more origins) and MA4's real
-advantage (wins the holdout point) look complementary rather than one
-dominating — an
-ensemble of LightGBM + MA4 is a reasonable option to consider for the
-frozen Phase 1 forecast rather than picking one outright. This would be
-new scope: not yet built, and would need its own rolling-origin CV
-evaluation before being trusted (per D008/D010 — the same discipline
-that changed every other conclusion in this session). Decide explicitly
-rather than defaulting to LightGBM alone by inertia.
-
-1. Retrain the frozen configuration on **all 170 weeks of Phase 0**
-   (no holdout withheld this time — there's no more Phase 0 data to
-   reserve once forecasting into genuinely unknown territory).
-2. Generate the 13-week forecast for the real Phase 1 dates
-   (2023-10-09 -> 2024-01-01, matching the sample submission's format).
-3. Clip to >=0, validate against the submission format (no missing
-   values, correct KEY + date columns).
-4. Save and commit: the forecast file, full model params, feature list,
-   training cutoff (2023-10-02), generation timestamp, and the code
-   commit hash it was produced from.
-5. Do not open, request, or add real Phase 1 actuals until after this
-   frozen forecast is committed.
+1. Push the commit containing `submissions/phase1/` to GitHub **before**
+   obtaining any actuals, so the freeze is publicly timestamped, not
+   only local.
+2. Obtain the real Phase 1 actuals (the competition's `Phase 1 -
+   Sales.csv`, 2023-10-09 → 2024-01-01) into `data/raw/`. Check it the
+   same way as Phase 0 (same 15,053 keys in the same order, complete
+   weekly grid, no NaN).
+3. Score all three frozen files plus the organizers' MA12 benchmark with
+   the official metric (`vn1_score`, cross-checked against the
+   organizers' scoring function). Report each, with bias breakdown and
+   per-segment scores. Do not modify any frozen file.
+4. Record whether the season-matched choice (D012) held up: did LightGBM
+   beat the blend and MA4 on Phase 1?
+5. Then Phase 2 (train on Phase 0 + Phase 1, forecast 13 weeks from
+   2024-01-08), following D012's carried-forward rule: all-season CV
+   **and** a season-matched backtest (Jan–Apr origins one year earlier),
+   both specified before looking at the forecast. D011 applies: nothing
+   from post-competition write-ups about Phase 2.
 
 ### Longer-term (after the Phase 1 freeze, or in parallel on Phase 0 only)
 - Revisit D006 (recursive vs. direct) and D007 (Tweedie vs. L2) if a
@@ -375,6 +420,9 @@ rather than defaulting to LightGBM alone by inertia.
   specific to naive segment-restricted training data, not every
   possible segment-aware design.
 - Denser origin sampling or an expanded lookback/rolling feature set.
+- A blend whose MA component is seasonally adjusted (e.g. MA4 scaled by
+  a Phase 0 seasonal index), to keep the blend's per-series error
+  advantage without missing Q4 rises (D012's revisit condition).
 - D008 (purge discipline, never select on the true holdout) is
   permanent and applies to all future comparisons.
 
@@ -408,13 +456,10 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-Session 6 — first decide explicitly (LightGBM alone, MA4 alone, or an
-ensemble, tested via rolling-origin CV per D008/D010) given D009's final
-mixed evidence, then retrain the frozen configuration on all 170 weeks
-of Phase 0, generate the real Phase 1 forecast (2023-10-09 to
-2024-01-01), and commit it with full provenance (params, feature list,
-training cutoff, commit hash, timestamp) — before requesting or opening
-any real Phase 1 actuals.
+Session 7 — push the frozen Phase 1 commit to GitHub, then obtain the
+real Phase 1 actuals and score all three frozen forecasts (LightGBM
+primary, blend, MA4) plus MA12 with the official metric, without
+touching the frozen files.
 
 ## Session-end rule
 End every session by updating this file: what got done, the latest score,

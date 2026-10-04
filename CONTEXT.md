@@ -161,7 +161,12 @@ src/
   data.py
   metrics.py
   backtest.py
+  features.py
+  pipeline.py      # frozen forecasting pipeline (D012)
   models/
+scripts/           # build_dataset.py, make_phase1_forecast.py
+submissions/       # frozen forecasts + provenance, committed before actuals
+tests/
 notebooks/
 data/raw/          # raw competition files, gitignored
 data/processed/    # vn1_long.parquet, generated / gitignored
