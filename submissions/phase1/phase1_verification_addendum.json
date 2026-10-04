@@ -1,0 +1,27 @@
+{
+  "verified_at_utc": "2026-10-04T12:54:03+00:00",
+  "verified_at_commit": "71030922ef504c1bc6d72ca2122f4bc70e952254",
+  "freeze_tag": "phase1-freeze-v1",
+  "freeze_commit": "1202691eccbb07b36a07b24b3f4b85fa0f19b6ca",
+  "generation_commit": "df6efed2012cf44a0d3ac511276ae75a445b6481",
+  "forecast_sha256_match_provenance": {
+    "phase1_forecast.csv": "e189fbe2cb6419bba07111c21436513803e57d363ffd90843e0c75f16c3925cc",
+    "phase1_secondary_blend.csv": "cfb347d98067bcce0dd0c764f553aaad102f61f42ecde3e0ee0192f85727bfbc",
+    "phase1_secondary_ma4.csv": "5d96e549bbaf0f2c79adfdef6158c12b6845ccf30e93149ba4f3ec0fba04b72a"
+  },
+  "raw_inputs_match_provenance": {
+    "Phase_0_Sales.csv": "034f50f7338c08cf1bb6facf8c5b36290f3e74d2e69db83099702d2a52f6534a",
+    "Phase_0_Price.csv": "9035cce137a4ab27e3caae6c41d80be41f25adb79b9665a55f6cc56db02ebf3a"
+  },
+  "processed_parquet_sha256": "730509bed75ab2f869fda1c929dd286bbf2f128510f93019a5960b12a4d24f63",
+  "environment_lock_sha256": "c1484d218af05c7742058f078b88ade6d495c13c8bd697fc3a2d5ba3f16b4792",
+  "regenerated_max_abs_diff": {
+    "phase1_forecast.csv": 9.094947017729282e-13,
+    "phase1_secondary_blend.csv": 9.094947017729282e-13,
+    "phase1_secondary_ma4.csv": 0.0
+  },
+  "regenerated_best_iteration": 223,
+  "lightgbm_version": "4.7.0",
+  "phase1_actuals_present_in_data_raw": false,
+  "note": "Separate from phase1_provenance.json, which stays exactly as frozen. Records the processed-data and environment hashes the original provenance lacked."
+}
