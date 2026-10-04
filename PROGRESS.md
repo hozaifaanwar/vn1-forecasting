@@ -310,8 +310,11 @@ Forecasting with Python*.
     weekly target_date) — needed to forecast from the last Phase 0 week.
   - `scripts/make_phase1_forecast.py` — refuses to run with uncommitted
     src/ or scripts/ changes, so the recorded hash is really the code
-    that ran. Trained on all 170 weeks (fit origins 52–132, early-stop
-    origins 148/152/156, best_iteration 223). Outputs in
+    that ran. Uses all 170 weeks, but trees are fit only on origins
+    52–132 (targets through week 145); origins 148/152/156 (targets
+    through 169) only pick the early-stopping iteration (223) — see
+    D012's appended correction. Refit-on-all is a declared Phase 2
+    candidate. Outputs in
     `submissions/phase1/`: `phase1_forecast.csv` (primary, LightGBM,
     total 4,341,145), `phase1_secondary_blend.csv` (3,929,913),
     `phase1_secondary_ma4.csv` (3,518,681), `phase1_provenance.json`
@@ -438,11 +441,11 @@ frozen and committed (D012). Next:
   sparse segment (zero_rate>=0.9) scores far worse than the other two
   segments and contributes 21.6% of total absolute error from only 10.6%
   of demand — a real, evidence-based sign it's the hardest part of the
-  problem. But Session 5 directly tested "give it dedicated treatment"
-  (a model trained only on sparse rows) and found that made it *worse*,
-  not better (D009) — the global model's cross-series learning matters
-  more than segment specialization, at least for this simple version of
-  specialization. Still open: whether a *different* kind of segment-aware
+  problem. Session 5 directly tested "give it dedicated treatment"
+  (a model trained only on sparse rows): after the D010 fix it was
+  numerically slightly better (1.2929 vs. 1.2990) but effectively tied
+  (D009), not worse as an earlier pass reported — too small a gain to
+  justify a second model. Still open: whether a *different* kind of segment-aware
   design (e.g. a two-stage hurdle model where both stages still see all
   data) would behave differently.
 

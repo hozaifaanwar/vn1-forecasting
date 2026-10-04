@@ -71,3 +71,17 @@ def test_to_submission_matches_official_wide_format_and_row_order():
     assert len(sub.columns) == 3 + 13
     pd.testing.assert_frame_equal(sub[KEY], key_order)
     assert not sub.isna().any().any()
+
+
+def test_to_submission_rejects_extra_series_and_non_finite_values():
+    df = _toy_df()
+    fc, _, _ = frozen_forecast(df, df["date"].nunique() - 1, config=FAST_CONFIG)
+    key_order = df[KEY].drop_duplicates().reset_index(drop=True)
+
+    with pytest.raises(AssertionError, match="series differ"):
+        to_submission(fc, key_order.iloc[1:])  # forecast has a series key_order lacks
+
+    bad = fc.copy()
+    bad.loc[0, "forecast"] = np.inf
+    with pytest.raises(AssertionError, match="non-finite"):
+        to_submission(bad, key_order)

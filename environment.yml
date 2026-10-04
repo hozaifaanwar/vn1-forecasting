@@ -1,20 +1,23 @@
+# Core versions pinned to those that produced the frozen Phase 1 forecast
+# (submissions/phase1/phase1_provenance.json). environment.lock.yml has the
+# full resolved environment (exported on Windows, conda-forge, no builds).
 name: vn1
 channels:
   - conda-forge
 dependencies:
   - python=3.11
-  - pandas
-  - numpy
-  - pyarrow
-  - matplotlib
-  - seaborn
-  - scikit-learn
-  - statsmodels
-  - lightgbm
+  - pandas=2.3.3
+  - numpy=2.4.6
+  - pyarrow=25.0.0
+  - scikit-learn=1.9.0
+  - lightgbm=4.7.0
+  - pytest=9.1.1
+  - matplotlib=3.11.1
+  - seaborn=0.13.2
+  - statsmodels=0.14.6
   - jupyter
   - ipykernel
-  - pytest
   - pip
   - pip:
-      - statsforecast
-      - missingno
+      - statsforecast==2.1.1
+      - missingno==0.5.2

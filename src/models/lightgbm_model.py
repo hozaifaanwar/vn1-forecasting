@@ -1,7 +1,18 @@
+import inspect
+
 import numpy as np
 import lightgbm as lgb
 
 from ..metrics import make_vn1_origin_mean_eval, vn1_lgb_eval
+
+# LightGBM 4.7 deprecates fit(eval_set=...) in favour of eval_X/eval_y, which
+# older versions don't accept. Use whichever this installation supports;
+# both pass the same validation data, so results are identical.
+_HAS_EVAL_XY = "eval_X" in inspect.signature(lgb.LGBMRegressor.fit).parameters
+
+
+def _eval_kwargs(X, y):
+    return {"eval_X": X, "eval_y": y} if _HAS_EVAL_XY else {"eval_set": [(X, y)]}
 
 
 def train_lgbm(
@@ -53,7 +64,7 @@ def train_lgbm(
     )
     model.fit(
         fit_mat[feature_cols], fit_mat[target_col],
-        eval_X=val_mat[feature_cols], eval_y=val_mat[target_col],
+        **_eval_kwargs(val_mat[feature_cols], val_mat[target_col]),
         eval_metric=eval_fn,
         categorical_feature=categorical_feature or [],
         callbacks=[lgb.early_stopping(stopping_rounds, first_metric_only=True, verbose=False)],

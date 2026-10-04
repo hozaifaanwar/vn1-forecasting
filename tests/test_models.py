@@ -41,3 +41,14 @@ def test_train_lgbm_is_deterministic_given_random_state():
     _, preds_a = train_lgbm(fit_mat, val_mat, feature_cols=["x1", "x2"], n_estimators=100, random_state=7)
     _, preds_b = train_lgbm(fit_mat, val_mat, feature_cols=["x1", "x2"], n_estimators=100, random_state=7)
     np.testing.assert_array_equal(preds_a, preds_b)
+
+
+def test_eval_kwargs_match_the_installed_lightgbm_api():
+    import inspect
+
+    from src.models.lightgbm_model import _eval_kwargs
+
+    params = inspect.signature(lgb.LGBMRegressor.fit).parameters
+    kwargs = _eval_kwargs("X", "y")
+    assert set(kwargs) <= set(params)
+    assert kwargs == ({"eval_X": "X", "eval_y": "y"} if "eval_X" in params else {"eval_set": [("X", "y")]})

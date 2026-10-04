@@ -1,10 +1,16 @@
 """Generate and freeze the Phase 1 forecast (DECISIONS.md D012).
 
-Trains the frozen pipeline (src/pipeline.py) on all 170 Phase 0 weeks and
-forecasts the 13 Phase 1 weeks (2023-10-09 -> 2024-01-01). Writes the
-submission plus a provenance file recording exactly what produced it.
-Refuses to run with uncommitted changes to src/ or scripts/, so the
-recorded commit hash really is the code that generated the forecast.
+Runs the frozen pipeline (src/pipeline.py) at the last Phase 0 week and
+forecasts the 13 Phase 1 weeks (2023-10-09 -> 2024-01-01). All 170 Phase 0
+weeks are used, but not all as fitted labels: trees are fit on the purged
+training origins (52-132, targets through week 145); origins 148/152/156
+(targets through week 169) are used only for early stopping; the forecast
+features come from week 169. (DECISIONS.md D012 correction.)
+
+Writes the submission plus a provenance file recording exactly what
+produced it. Refuses to run with uncommitted changes to src/ or scripts/,
+so the recorded commit hash really is the code that generated the
+forecast, and refuses to overwrite an existing frozen forecast.
 
     python scripts/make_phase1_forecast.py
 """
@@ -54,6 +60,8 @@ def main():
     if dirty:
         raise SystemExit(f"Uncommitted changes in src/ or scripts/ — commit first:\n{dirty}")
     commit = git("rev-parse", "HEAD")
+    if (OUT_DIR / "phase1_forecast.csv").exists():
+        raise SystemExit(f"{OUT_DIR.relative_to(ROOT)} already holds a frozen forecast — not overwriting it")
 
     df = pd.read_parquet(DATA)
     validate_long(df)
@@ -92,7 +100,8 @@ def main():
         "lightgbm_version": lgb.__version__,
         "pandas_version": pd.__version__,
         "input_sha256": {"Phase_0_Sales.csv": sha256(RAW_SALES),
-                         "Phase_0_Price.csv": sha256(ROOT / "data/raw/Phase_0_Price.csv")},
+                         "Phase_0_Price.csv": sha256(ROOT / "data/raw/Phase_0_Price.csv"),
+                         "vn1_long.parquet": sha256(DATA)},
         "output_sha256": {name: sha256(OUT_DIR / name) for name in files.values()},
         "forecast_totals": {c: float(forecast[c].sum()) for c in ("lgbm", "blend", "ma4", "forecast")},
     }

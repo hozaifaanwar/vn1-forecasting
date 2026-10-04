@@ -7,7 +7,8 @@ boosting, and time-series foundation models under one backtest harness.
 **Status:** Session 6. The Phase 1 forecast (13 weeks, 2023-10-09 to
 2024-01-01) is frozen and committed with full provenance in
 [submissions/phase1/](submissions/phase1/), *before* any Phase 1 actuals
-were obtained. It hasn't been scored against real Phase 1 demand yet. See
+were obtained, and publicly tagged as `phase1-freeze-v1`. It hasn't been
+scored against real Phase 1 demand yet. See
 [PROGRESS.md](PROGRESS.md) for current state and
 [DECISIONS.md](DECISIONS.md) for the reasoning behind each choice.
 
@@ -20,7 +21,8 @@ conda activate vn1
 ## Reproduce the Phase 1 forecast
 ```bash
 python scripts/build_dataset.py        # raw CSVs -> data/processed/vn1_long.parquet
-python scripts/make_phase1_forecast.py # refuses to run with uncommitted code changes
+python scripts/make_phase1_forecast.py # refuses uncommitted code changes and won't overwrite the frozen files
+python scripts/verify_phase1_freeze.py # regenerates in memory and checks against the frozen files
 pytest tests/
 ```
 
@@ -40,7 +42,10 @@ Lower is better.
 - **Averaged over all seasons, the blend is best.** It wins 11 of 15
   rolling-CV origins against each of its two components.
 - **For an Oct–Jan horizon, LightGBM alone is best.** It wins all 5
-  backtests run at the same calendar point one year earlier. Phase 0
+  backtests run at the same calendar point one year earlier. Those 5
+  origins sit one week apart in a single season (Q4 2022) and share only
+  two trained models, so they're one overlapping seasonal episode, not
+  five independent replications. Phase 0
   demand rises 26–37% in Oct–Jan every year, and a flat moving average
   can't anticipate that, which drags the blend down with it.
 

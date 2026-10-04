@@ -104,8 +104,14 @@ def to_submission(forecast, key_order, column="forecast"):
     """Pivot a long forecast to the official wide format: KEY columns then one
     column per forecast week, rows in `key_order` (the organizers' scorer
     asserts the submission index equals the actuals' index exactly)."""
+    order = pd.MultiIndex.from_frame(key_order[KEY])
+    assert not order.duplicated().any(), "key_order has duplicate series"
     wide = forecast.pivot(index=KEY, columns="date", values=column)
-    wide = wide.reindex(pd.MultiIndex.from_frame(key_order[KEY]))
+    # Exact key-set match: reindex alone would silently drop extra series.
+    assert set(wide.index) == set(order), "forecast series differ from key_order's series"
+    wide = wide.reindex(order)
     assert not wide.isna().any().any(), "submission has missing values"
+    assert np.isfinite(wide.to_numpy()).all(), "submission has non-finite values"
+    assert (wide.to_numpy() >= 0).all(), "submission has negative values"
     wide.columns = [pd.Timestamp(c).strftime("%Y-%m-%d") for c in wide.columns]
     return wide.reset_index()
