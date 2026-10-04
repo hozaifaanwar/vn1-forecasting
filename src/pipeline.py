@@ -22,7 +22,11 @@ FROZEN_CONFIG = {
     "origin_start": 52,  # enough lookback for lag_52
     "origin_step": 4,
     "n_val_origins": 3,
-    "w_lgbm": 0.5,  # D012: equal-weight blend with MA4, not tuned
+    "w_lgbm": 0.5,  # equal-weight blend with MA4, not tuned
+    # D012: which column is the submitted forecast. LightGBM alone for an
+    # Oct-Jan horizon (season-matched backtest); the blend won the
+    # all-season rolling CV, so it is frozen alongside as a secondary.
+    "primary": "lgbm",
 }
 
 
@@ -40,11 +44,11 @@ def _segment_as_category(mat):
 def frozen_forecast(df, forecast_origin, config=FROZEN_CONFIG, horizons=HORIZONS):
     """Train the frozen LightGBM configuration using only data at or before
     `forecast_origin` (an index into df's sorted dates), then forecast the
-    next len(horizons) weeks as an equal-weight blend of LightGBM and MA4.
+    next len(horizons) weeks with LightGBM, MA4 and their weighted blend.
 
     Returns `(forecast, model, info)`. `forecast` is long-form: KEY + date +
-    the two component forecasts + the blended `forecast`, plus `target`
-    (NaN when the forecast weeks are beyond `df`).
+    `lgbm`, `ma4`, `blend`, and `forecast` (= the `config["primary"]`
+    column), plus `target` (NaN when the forecast weeks are beyond `df`).
     """
     origins = origin_pool(forecast_origin, horizons, config["origin_start"], config["origin_step"])
     val_origins = origins[-config["n_val_origins"]:]
@@ -78,7 +82,8 @@ def frozen_forecast(df, forecast_origin, config=FROZEN_CONFIG, horizons=HORIZONS
     forecast = eval_mat[KEY + ["target_date", "target"]].rename(columns={"target_date": "date"})
     forecast["lgbm"] = lgbm
     forecast["ma4"] = ma4
-    forecast["forecast"] = w * lgbm + (1 - w) * ma4
+    forecast["blend"] = w * lgbm + (1 - w) * ma4
+    forecast["forecast"] = forecast[config["primary"]]
 
     assert forecast["forecast"].notna().all() and (forecast["forecast"] >= 0).all()
     assert not forecast.duplicated(KEY + ["date"]).any()
@@ -95,11 +100,11 @@ def frozen_forecast(df, forecast_origin, config=FROZEN_CONFIG, horizons=HORIZONS
     return forecast, model, info
 
 
-def to_submission(forecast, key_order):
+def to_submission(forecast, key_order, column="forecast"):
     """Pivot a long forecast to the official wide format: KEY columns then one
     column per forecast week, rows in `key_order` (the organizers' scorer
     asserts the submission index equals the actuals' index exactly)."""
-    wide = forecast.pivot(index=KEY, columns="date", values="forecast")
+    wide = forecast.pivot(index=KEY, columns="date", values=column)
     wide = wide.reindex(pd.MultiIndex.from_frame(key_order[KEY]))
     assert not wide.isna().any().any(), "submission has missing values"
     wide.columns = [pd.Timestamp(c).strftime("%Y-%m-%d") for c in wide.columns]

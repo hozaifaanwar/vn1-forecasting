@@ -52,7 +52,8 @@ def test_frozen_forecast_blends_lgbm_and_ma4_and_covers_every_series_week():
     assert len(fc) == df.groupby(KEY).ngroups * 13
     assert fc["target"].isna().all()  # genuinely beyond the data
     assert fc["date"].min() == df["date"].max() + pd.Timedelta(weeks=1)
-    np.testing.assert_allclose(fc["forecast"], 0.5 * fc["lgbm"] + 0.5 * fc["ma4"])
+    np.testing.assert_allclose(fc["blend"], 0.5 * fc["lgbm"] + 0.5 * fc["ma4"])
+    np.testing.assert_array_equal(fc["forecast"], fc[FAST_CONFIG["primary"]])
 
     last4 = df[df["date"] > df["date"].unique()[last - 4]].groupby(KEY)["sales"].mean()
     ma4 = fc.groupby(KEY)["ma4"].first()

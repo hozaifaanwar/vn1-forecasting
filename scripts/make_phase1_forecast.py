@@ -65,32 +65,40 @@ def main():
     assert sorted(forecast["date"].unique()) == list(EXPECTED_DATES)
 
     key_order = pd.read_csv(RAW_SALES, usecols=KEY)
-    submission = to_submission(forecast, key_order)
-    assert len(submission) == 15_053
-    assert list(submission.columns[3:]) == [d.strftime("%Y-%m-%d") for d in EXPECTED_DATES]
-
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    sub_path = OUT_DIR / "phase1_forecast.csv"
-    submission.to_csv(sub_path, index=False)
+    # Primary submission plus the two declared secondaries, all frozen
+    # together before any Phase 1 actuals are seen.
+    files = {"forecast": "phase1_forecast.csv", "blend": "phase1_secondary_blend.csv",
+             "ma4": "phase1_secondary_ma4.csv"}
+    for column, name in files.items():
+        submission = to_submission(forecast, key_order, column=column)
+        assert len(submission) == 15_053
+        assert list(submission.columns[3:]) == [d.strftime("%Y-%m-%d") for d in EXPECTED_DATES]
+        submission.to_csv(OUT_DIR / name, index=False)
 
     provenance = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "code_commit": commit,
         "training_cutoff": "2023-10-02",
         "forecast_dates": [d.strftime("%Y-%m-%d") for d in EXPECTED_DATES],
-        "method": "0.5 * LightGBM (direct multi-horizon) + 0.5 * MA4, clipped >= 0",
+        "primary": f"{FROZEN_CONFIG['primary']} -> phase1_forecast.csv (DECISIONS.md D012)",
+        "secondaries": {
+            "phase1_secondary_blend.csv": f"{FROZEN_CONFIG['w_lgbm']} * LightGBM + "
+                                          f"{1 - FROZEN_CONFIG['w_lgbm']} * MA4",
+            "phase1_secondary_ma4.csv": "mean of the last 4 Phase 0 weeks, flat",
+        },
         "frozen_config": FROZEN_CONFIG,
         **info,
         "lightgbm_version": lgb.__version__,
         "pandas_version": pd.__version__,
         "input_sha256": {"Phase_0_Sales.csv": sha256(RAW_SALES),
                          "Phase_0_Price.csv": sha256(ROOT / "data/raw/Phase_0_Price.csv")},
-        "submission_sha256": sha256(sub_path),
-        "forecast_totals": {c: float(forecast[c].sum()) for c in ("lgbm", "ma4", "forecast")},
+        "output_sha256": {name: sha256(OUT_DIR / name) for name in files.values()},
+        "forecast_totals": {c: float(forecast[c].sum()) for c in ("lgbm", "blend", "ma4", "forecast")},
     }
     (OUT_DIR / "phase1_provenance.json").write_text(json.dumps(provenance, indent=2, default=str))
 
-    print(f"saved      : {sub_path.relative_to(ROOT)} ({submission.shape})")
+    print(f"saved      : {', '.join(files.values())} in {OUT_DIR.relative_to(ROOT)}")
     print(f"commit     : {commit}")
     print(f"best_iter  : {info['best_iteration']}")
     print(f"totals     : {provenance['forecast_totals']}")
