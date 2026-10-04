@@ -125,6 +125,22 @@ def test_build_direct_horizon_matrix_rejects_origin_too_close_to_end():
         build_direct_horizon_matrix(df, origins=[55], horizons=[13])
 
 
+def test_build_direct_horizon_matrix_forecasts_past_end_without_targets():
+    longer = _toy_df(n_series=2, n_weeks=80)
+    df = longer[longer["date"] < longer["date"].unique()[60]]
+    last = 59
+    result = build_direct_horizon_matrix(df, origins=[last], horizons=[1, 13], require_target=False)
+    assert result["target"].isna().all()
+    last_date = df["date"].max()
+    assert sorted(result["target_date"].unique()) == [
+        last_date + pd.Timedelta(weeks=1), last_date + pd.Timedelta(weeks=13)
+    ]
+    # Features match those built for the same origin when targets do exist.
+    with_target = build_direct_horizon_matrix(longer, origins=[last], horizons=[1, 13])
+    feats = [c for c in result.columns if c not in ("target",)]
+    pd.testing.assert_frame_equal(result[feats], with_target[feats])
+
+
 def test_purge_fit_origins_drops_overlapping_origins():
     # Reproduces the exact overlap the review caught: origins 120/124/128
     # have targets reaching 133/137/141, all >= min(val_origins)=132.

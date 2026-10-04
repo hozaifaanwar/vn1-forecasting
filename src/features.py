@@ -43,6 +43,7 @@ def build_direct_horizon_matrix(
     roll_windows=(4, 8, 12, 26),
     segment_active_max=0.3,
     segment_sparse_min=0.9,
+    require_target=True,
 ):
     """Build a direct multi-horizon supervised table (see DECISIONS.md D006).
 
@@ -60,9 +61,17 @@ def build_direct_horizon_matrix(
     responsible for keeping origin+max(horizons) within whatever period
     is meant to be visible (see notebooks/04_session4.ipynb for how the
     train/eval split is enforced this way).
+
+    `require_target=False` allows origin+horizon to run past the last date
+    in `df` — the genuine-forecast case (e.g. forecasting Phase 1 from the
+    final Phase 0 week). Such rows get `target=NaN` and a `target_date`
+    extrapolated on the weekly grid; features are unaffected, since they
+    only ever read data at or before the origin.
     """
     dates = np.sort(df["date"].unique())
     n_dates = len(dates)
+    week = pd.Timedelta(weeks=1)
+    assert (np.diff(dates) == week).all(), "dates must form a complete weekly grid"
 
     sales_wide = df.pivot(index=KEY, columns="date", values="sales").reindex(columns=dates)
     price_wide = df.pivot(index=KEY, columns="date", values="price").reindex(columns=dates)
@@ -80,7 +89,9 @@ def build_direct_horizon_matrix(
 
     for o in origins:
         assert o - max_lookback + 1 >= 0, f"origin {o} too early for the largest lookback"
-        assert o + max(horizons) < n_dates, f"origin {o} + max horizon exceeds available dates"
+        assert o < n_dates, f"origin {o} is past the last available date"
+        if require_target:
+            assert o + max(horizons) < n_dates, f"origin {o} + max horizon exceeds available dates"
 
         # Expanding (origin-relative, not full-series) zero rate — using
         # only history up to and including the origin, so this can't leak
@@ -101,13 +112,14 @@ def build_direct_horizon_matrix(
 
         for h in horizons:
             t = o + h
-            target_date = pd.Timestamp(dates[t])
+            target_date = pd.Timestamp(dates[o]) + h * week
+            target = sales_arr[:, t] if t < n_dates else np.full(len(keys_df), np.nan)
             block = pd.DataFrame({
                 **{c: keys_df[c].to_numpy() for c in KEY},
                 "origin_date": dates[o],
                 "horizon": h,
                 "target_date": target_date,
-                "target": sales_arr[:, t],
+                "target": target,
                 **lag_feats,
                 **roll_means,
                 "roll_std_12": roll_std_12,
