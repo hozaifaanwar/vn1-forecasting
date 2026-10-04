@@ -395,9 +395,15 @@ not yet scored.
 The Phase 1 forecast (LightGBM primary + blend and MA4 secondaries) is
 frozen and committed (D012). Next:
 
-1. Push the commit containing `submissions/phase1/` to GitHub **before**
-   obtaining any actuals, so the freeze is publicly timestamped, not
-   only local.
+1. [DONE] Freeze pushed and tagged `phase1-freeze-v1` (commit 1202691)
+   before any actuals were obtained. Post-freeze corrections followed in
+   7103092. `scripts/verify_phase1_freeze.py` confirmed the frozen files
+   are unchanged and regenerate exactly; results in
+   `submissions/phase1/phase1_verification_addendum.json`.
+1b. **Learner step, before downloading actuals:** the user writes, without
+   agent input, the expected ranking and a rough score range for
+   LightGBM, blend, MA4 and MA12 on Phase 1, the reasons, and what result
+   would overturn that reasoning. Commit it before the reveal.
 2. Obtain the real Phase 1 actuals (the competition's `Phase 1 -
    Sales.csv`, 2023-10-09 → 2024-01-01) into `data/raw/`. Check it the
    same way as Phase 0 (same 15,053 keys in the same order, complete
@@ -459,10 +465,11 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-Session 7 — push the frozen Phase 1 commit to GitHub, then obtain the
-real Phase 1 actuals and score all three frozen forecasts (LightGBM
-primary, blend, MA4) plus MA12 with the official metric, without
-touching the frozen files.
+Session 7 — the user writes and commits their Phase 1 predictions
+(ranking, score ranges, reasons, what would change their mind). Then
+obtain the real Phase 1 actuals and score the three frozen forecasts plus
+MA12, without touching the frozen files. The user interprets the result
+first.
 
 ## Session-end rule
 End every session by updating this file: what got done, the latest score,
