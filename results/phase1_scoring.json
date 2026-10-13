@@ -1,0 +1,13 @@
+{
+  "scored_at_utc": "2026-10-13T15:18:18+00:00",
+  "scored_at_commit": "6d1b51873d1754dd9ea94446e4f063e79959d742",
+  "freeze_tag": "phase1-freeze-v1",
+  "predictions_commit": "6d1b51873d1754dd9ea94446e4f063e79959d742",
+  "actuals_file": "Phase 1 - Sales.csv",
+  "actuals_sha256": "59e74d0def7e7f45ce30f53d9643da3112926189e7fed66321fec2095468b4b2",
+  "frozen_sha256": {
+    "phase1_forecast.csv": "e189fbe2cb6419bba07111c21436513803e57d363ffd90843e0c75f16c3925cc",
+    "phase1_secondary_blend.csv": "cfb347d98067bcce0dd0c764f553aaad102f61f42ecde3e0ee0192f85727bfbc",
+    "phase1_secondary_ma4.csv": "5d96e549bbaf0f2c79adfdef6158c12b6845ccf30e93149ba4f3ec0fba04b72a"
+  }
+}
