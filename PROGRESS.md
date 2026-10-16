@@ -330,6 +330,31 @@ Forecasting with Python*.
     suite: 51/51 passing.
   - Notebook: notebooks/06_session6.ipynb, executed end-to-end.
 
+- [DONE] Session 7 — Phase 1 scored against the real actuals (DECISIONS.md
+  D013). **The LightGBM primary came last.**
+  - Freeze pushed and tagged first (`phase1-freeze-v1`), post-freeze
+    corrections after, learner predictions committed before scoring
+    (14d6731, revised draft 6d1b518). `scripts/score_phase1.py` refuses to
+    run unless the frozen files match the tag and predictions are committed.
+  - Scores: **blend 0.5704**, MA4 0.6411, MA12 0.6597, **LightGBM 0.7341**.
+    Actual demand 3,905,806 (+11.3% on the last 13 Phase 0 weeks).
+    LightGBM forecast +23.7%, the blend +0.6% over actual, MA4 −9.9%.
+  - Why LightGBM lost: rise too large (history's 26–37%, not this year's
+    11%); peak too broad and too late into Christmas; over-forecast 84.4% of
+    series, including 143,593 units on 4,522 series that sold nothing;
+    sparse segment over-forecast by 54%.
+  - Feature defect found: all lags, including `lag_52`, are measured from
+    the origin, so the "last year" lag never matches the target week.
+  - D012's carried-forward rule replaced (D013): the pre-written rule picks
+    the primary, with no post-hoc overrides; season-matched evidence needs
+    ≥2 independent seasons; default to combining when the comparisons
+    disagree.
+  - Learner predicted LightGBM > blend > MA4 > MA12; actual order was the
+    reverse.
+  - `src/scoring.py` + tests (57/57 passing). Results in
+    `results/phase1_scores.csv`, `results/phase1_weekly_totals.csv`,
+    `results/phase1_scoring.json`.
+
 ---
 
 ## Learning progress
@@ -378,47 +403,31 @@ freeze-before-reveal with provenance (commit hash, hashes, timestamp).
 ---
 
 ## Current benchmark
-Development holdout (Jul–Oct horizon; already inspected many times, so a
-development result, not a pristine one): **blend 0.4839**, MA4 0.4987,
-LightGBM 0.4996, MA12 0.5163 (tracked for external comparability).
-All-season rolling CV (15 origins, mean): blend 0.5387, LightGBM 0.5482,
-MA4 0.5834. Season-matched Oct–Jan backtest (5 origins, mean): **LightGBM
-0.7127**, blend 0.7536, MA4 0.8384. Which model is "best" depends on the
-horizon's season (D012). The real test is the frozen Phase 1 forecast,
-not yet scored.
+**Phase 1, real actuals (the first clean test):** blend 0.5704, MA4 0.6411,
+MA12 (official) 0.6597, LightGBM 0.7341. Earlier Phase 0 evidence, for
+context: development holdout blend 0.4839 / MA4 0.4987 / LightGBM 0.4996;
+all-season rolling CV blend 0.5387 / LightGBM 0.5482 / MA4 0.5834.
 
 ---
 
 ## Next VN1 work
 
-### Immediate — Session 7: score the frozen Phase 1 forecasts
-The Phase 1 forecast (LightGBM primary + blend and MA4 secondaries) is
-frozen and committed (D012). Next:
-
-1. [DONE] Freeze pushed and tagged `phase1-freeze-v1` (commit 1202691)
-   before any actuals were obtained. Post-freeze corrections followed in
-   7103092. `scripts/verify_phase1_freeze.py` confirmed the frozen files
-   are unchanged and regenerate exactly; results in
-   `submissions/phase1/phase1_verification_addendum.json`.
-1b. **Learner step, before downloading actuals:** the user writes, without
-   agent input, the expected ranking and a rough score range for
-   LightGBM, blend, MA4 and MA12 on Phase 1, the reasons, and what result
-   would overturn that reasoning. Commit it before the reveal.
-2. Obtain the real Phase 1 actuals (the competition's `Phase 1 -
-   Sales.csv`, 2023-10-09 → 2024-01-01) into `data/raw/`. Check it the
-   same way as Phase 0 (same 15,053 keys in the same order, complete
-   weekly grid, no NaN).
-3. Score all three frozen files plus the organizers' MA12 benchmark with
-   the official metric (`vn1_score`, cross-checked against the
-   organizers' scoring function). Report each, with bias breakdown and
-   per-segment scores. Do not modify any frozen file.
-4. Record whether the season-matched choice (D012) held up: did LightGBM
-   beat the blend and MA4 on Phase 1?
-5. Then Phase 2 (train on Phase 0 + Phase 1, forecast 13 weeks from
-   2024-01-08), following D012's carried-forward rule: all-season CV
-   **and** a season-matched backtest (Jan–Apr origins one year earlier),
-   both specified before looking at the forecast. D011 applies: nothing
-   from post-competition write-ups about Phase 2.
+### Immediate — Session 8: understand Phase 1, then plan Phase 2
+1. **Learner step:** write a five-sentence interpretation of Phase 1 in
+   your own words (prediction vs. outcome, what it says about the
+   reasoning) in `notes/phase1_predictions.md` or a new note.
+2. Add Phase 1 to the dataset: extend `scripts/build_dataset.py` to build
+   Phase 0 + Phase 1 (183 weeks), with the same validation checks.
+3. **Learner-led demand session** on Phase 0 + Phase 1: which clients,
+   warehouses and products drove the Nov 20 / Dec 11 peaks; how
+   concentrated the Q4 rise was; the Christmas/New Year drop; spikes;
+   pre-launch zeros.
+4. Write the Phase 2 shortlist and decision rule (D014) per D013 *before*
+   running any candidate. Candidates discussed so far: current LightGBM,
+   target-aligned annual lag + aggregate seasonal features, refit-on-all,
+   seasonally adjusted MA4, a sparse/two-stage candidate, CatBoost with
+   series IDs, fixed-weight blends. D011 applies: nothing from
+   post-competition write-ups.
 
 ### Longer-term (after the Phase 1 freeze, or in parallel on Phase 0 only)
 - Revisit D006 (recursive vs. direct) and D007 (Tweedie vs. L2) if a
@@ -429,6 +438,9 @@ frozen and committed (D012). Next:
   specific to naive segment-restricted training data, not every
   possible segment-aware design.
 - Denser origin sampling or an expanded lookback/rolling feature set.
+- Fix the origin-relative `lag_52` (D013): add a target-aligned annual lag
+  `sales[origin + h − 52]` (and nearby weeks), keeping D006's origin
+  discipline for everything else.
 - A blend whose MA component is seasonally adjusted (e.g. MA4 scaled by
   a Phase 0 seasonal index), to keep the blend's per-series error
   advantage without missing Q4 rises (D012's revisit condition).
@@ -465,11 +477,10 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-Session 7 — the user writes and commits their Phase 1 predictions
-(ranking, score ranges, reasons, what would change their mind). Then
-obtain the real Phase 1 actuals and score the three frozen forecasts plus
-MA12, without touching the frozen files. The user interprets the result
-first.
+Session 8 — the user writes a five-sentence interpretation of the Phase 1
+result in their own words; then extend the dataset to Phase 0 + Phase 1 and
+run a learner-led demand session on what drove the Q4 peaks, before any
+Phase 2 modelling.
 
 ## Session-end rule
 End every session by updating this file: what got done, the latest score,

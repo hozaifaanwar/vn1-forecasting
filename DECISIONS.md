@@ -124,3 +124,40 @@ Phase 1 is an Oct–Jan horizon, so the season-matched result governs the Phase 
 **Revisit if:** Phase 1 actuals show the season-matched backtest misjudged the horizon (e.g. the blend or MA4 beats LightGBM on Phase 1), or a model that captures seasonality without giving up the blend's per-series error advantage (e.g. a blend whose MA component is seasonally adjusted) is tested and wins both comparisons.
 
 **Correction (appended after the freeze, per the append-only policy; caught by external review):** "trained on all 170 Phase 0 weeks" above is inaccurate. All 170 weeks are *used*, but not all as fitted labels. LightGBM's trees are fit on the purged training origins 52–132, whose targets end at week 145. Origins 148/152/156, whose targets run through week 169, are used only to choose the early-stopping iteration (223). The forecast's input features come from week 169. So the most recent 24 weeks of labelled examples never fit a tree. This is the same procedure that was backtested (dev holdout and season-matched origins), so the frozen forecast is consistent with its evidence; the Phase 1 freeze (tag `phase1-freeze-v1`, commit 1202691) is not reopened. **Declared Phase 2 candidate:** choose the iteration count on the purged validation block, then refit on every fully labelled origin with that count. It has not been backtested yet, so it enters Phase 2 as a candidate under the two comparisons above, not as an automatic upgrade — a tree count tuned on fewer rows need not transfer to more.
+
+## D013 — Phase 1 outcome: the primary lost; D012's carried-forward rule is replaced
+
+**Result (scored by `scripts/score_phase1.py` against the real Phase 1 actuals; frozen files verified identical to tag `phase1-freeze-v1`; every score cross-checked against the organizers' own formula):**
+
+| Model | Score | Error part | Bias part | Total forecast vs. actual 3,905,806 |
+|---|---|---|---|---|
+| Blend (secondary) | **0.5704** | 0.5642 | 0.0062 | 3,929,913 (+0.6%) |
+| MA4 (secondary) | 0.6411 | 0.5420 | 0.0991 | 3,518,681 (−9.9%) |
+| MA12 (official benchmark) | 0.6597 | 0.5420 | 0.1177 | 3,445,926 (−11.8%) |
+| LightGBM (primary) | 0.7341 | 0.6226 | 0.1115 | 4,341,145 (+11.1%) |
+
+The declared primary ranked last, behind the official MA12 benchmark. The blend that D012 demoted to secondary won, beating LightGBM in 12 of 13 weeks.
+
+**What went wrong with LightGBM (all verified against the data):**
+
+- **Magnitude.** Demand rose 11.3% over the last 13 Phase 0 weeks. LightGBM forecast +23.7%, close to the 26–37% rises of 2020–2022. The direction was right; the size wasn't. History alone could not reveal that this year's rise would be weaker.
+- **Timing and shape.** The real rise was a narrow peak (Nov 20, plus Dec 11) followed by a drop through Christmas and New Year. LightGBM forecast a broad, persistent peak. Its weekly score was above 1.0 from Dec 4 to Dec 25.
+- **Allocation.** It over-forecast 84.4% of series. Its median forecast per series was 34 units against a median actual of 7. It put 143,593 units on the 4,522 series that sold nothing (MA4 put 20,520 there). Sparse-segment demand was over-forecast by 54% (440,439 vs. 286,554).
+- **Feature defect found.** Every lag in `build_direct_horizon_matrix` is measured back from the origin, `lag_52` included, so it holds the same value for all 13 horizons and never matches the target week of the previous year. A target-aligned annual lag (`sales[origin + h − 52]`) is known at the origin and is leakage-safe. The model had only calendar features for *when* in the year a week falls, with no series-level record of that same week last year.
+
+**Hypotheses, not established causes:** (1) one global model spreads a learned seasonal uplift across series that will not sell; (2) the squared-error objective targets the mean, which helps the bias part but hurts the error part on sparse series (but L1 was clearly worse in D009, so switching objectives is not the obvious fix); (3) the fitted trees never saw the most recent 24 labelled weeks (D012 correction). Each is a Phase 2 candidate to test, not a conclusion.
+
+**The decision error, stated plainly:** the pre-registered all-season rule chose the blend. An analysis run after looking at the forecast (one season, five overlapping origins, two distinct trained models) was then allowed to override it, on the recommendation of the agent. D012 acknowledged that evidence was "close to one strong data point" and still let it decide. The phenomenon it detected was real (Q4 rises), but its historical size did not repeat in Phase 1. In this case, seasonal relevance did not compensate for having only one independent seasonal episode, and a post-hoc analysis should not have overturned a planned rule.
+
+**Decision — replaces D012's "process rule carried forward":**
+
+1. The selection rule is committed before candidate performance is evaluated. A candidate may be invalidated (or fixed once) for a documented data, leakage, implementation or feasibility defect, but only one demonstrable independently of its score (e.g. a failing leakage test, impossible values, a crash). The remaining candidates are never reordered using observed performance. Analyses run afterwards are recorded as diagnostics only.
+2. Season-matched backtests remain required as a comparison specified up front. Season-matched evidence may decide the primary only when the pre-written rule permits it **and at least two reasonably independent seasons agree**. With fewer seasons it is supporting evidence only. (For a Jan–Apr Phase 2 horizon, the Jan 2022 and Jan 2023 origins both have enough history, though Jan 2022 has little training history for ML candidates.)
+3. When valid comparisons disagree, evaluate a **pre-declared** fixed-weight combination of **complementary** candidates. Use it only if it passes the same pre-written acceptance criteria as any other candidate; otherwise retain the incumbent.
+4. Report the error part, the bias part, per-segment scores, the weekly shape, and forecast volume placed on series that later sell nothing, not only the combined score.
+
+**Caution against over-learning:** Phase 1 is also a single season. "The blend wins" is one result, just as "LightGBM wins Oct–Jan" was. Rule 3 treats a combination as a hedge worth testing, not a default, and not because the blend has been proven better.
+
+**Learner prediction (committed before scoring as 14d6731 / 6d1b518):** predicted LightGBM > blend > MA4 > MA12; actual blend > MA4 > MA12 > LightGBM. The stated overturn condition (weak or absent seasonality causing over-forecasts) partly occurred: seasonality was present but weaker, and the model over-forecast.
+
+**Revisit if:** never for rule 1 (a permanent process constraint, like D008/D010/D011). Rules 2–4 may be revised with evidence from Phase 2.
