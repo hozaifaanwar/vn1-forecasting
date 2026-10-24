@@ -100,3 +100,38 @@ def test_load_long_catches_mismatched_raw_files(tmp_path):
 
     with pytest.raises(AssertionError, match="only one of sales/price"):
         load_long(sales_path, price_path)
+
+
+def _write_wide(path, keys, weeks, values):
+    df = pd.DataFrame(keys, columns=KEY)
+    for w, col in zip(weeks, np.asarray(values, dtype=float).T):
+        df[w] = col
+    df.to_csv(path, index=False)
+    return path
+
+
+def test_load_long_joins_phases_and_ffills_price_across_the_boundary(tmp_path):
+    keys = [(0, 0, 0), (0, 0, 1)]
+    s0 = _write_wide(tmp_path / "s0.csv", keys, ["2023-09-25", "2023-10-02"], [[2, 0], [0, 0]])
+    p0 = _write_wide(tmp_path / "p0.csv", keys, ["2023-09-25", "2023-10-02"], [[5.0, np.nan], [np.nan, np.nan]])
+    s1 = _write_wide(tmp_path / "s1.csv", keys, ["2023-10-09"], [[0], [3]])
+    p1 = _write_wide(tmp_path / "p1.csv", keys, ["2023-10-09"], [[np.nan], [7.0]])
+
+    cdf = clean(load_long([s0, s1], [p0, p1]))
+    validate_long(cdf)
+    assert cdf["date"].nunique() == 3
+    a = cdf[cdf["Product"] == 0].sort_values("date")
+    assert a["price"].tolist() == [5.0, 5.0, 5.0]  # Phase 0 price carried into Phase 1
+    b = cdf[cdf["Product"] == 1].sort_values("date")
+    assert b["price"].isna().tolist() == [True, True, False]  # leading NaNs still not back-filled
+
+
+def test_load_long_rejects_mismatched_series_or_repeated_weeks(tmp_path):
+    keys = [(0, 0, 0), (0, 0, 1)]
+    s0 = _write_wide(tmp_path / "s0.csv", keys, ["2023-10-02"], [[1], [1]])
+    p0 = _write_wide(tmp_path / "p0.csv", keys, ["2023-10-02"], [[1.0], [1.0]])
+    reordered = _write_wide(tmp_path / "s1.csv", keys[::-1], ["2023-10-09"], [[1], [1]])
+    with pytest.raises(AssertionError, match="row order"):
+        load_long([s0, reordered], [p0, p0])
+    with pytest.raises(AssertionError, match="more than one file"):
+        load_long([s0, s0], [p0, p0])

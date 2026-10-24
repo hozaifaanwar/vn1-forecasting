@@ -4,7 +4,8 @@ Never modifies the frozen files (phase1_forecast.csv, the two secondaries,
 phase1_provenance.json). It checks that their hashes still match the
 provenance, that the raw inputs are unchanged, that the frozen pipeline
 regenerates every forecast value from the current processed data, and
-that no Phase 1 actuals are present in data/raw/. Results go to
+that no Phase 1 actuals were present in data/raw/ when the addendum was first written
+(after the reveal, it re-runs every other check without overwriting the addendum). Results go to
 submissions/phase1/phase1_verification_addendum.json, which records what
 the original provenance lacks: the processed-parquet and environment-lock
 hashes.
@@ -81,7 +82,12 @@ def main():
         p.name for p in RAW.glob("*.csv")
         if "2023-10-09" in p.open(encoding="utf-8").readline() and p.name != placeholder
     )
-    assert not with_phase1_dates, f"possible Phase 1 actuals present: {with_phase1_dates}"
+    addendum_path = OUT_DIR / "phase1_verification_addendum.json"
+    # The addendum is a pre-reveal record: written once, never overwritten.
+    # Before it exists, Phase 1 actuals must be absent; afterwards (post-
+    # reveal) their presence is expected and only reported.
+    if not addendum_path.exists():
+        assert not with_phase1_dates, f"possible Phase 1 actuals present: {with_phase1_dates}"
 
     # 4. Regenerate from the current processed data and compare every value.
     df = pd.read_parquet(DATA)
@@ -108,12 +114,18 @@ def main():
         "regenerated_max_abs_diff": max_abs_diff,
         "regenerated_best_iteration": info["best_iteration"],
         "lightgbm_version": lgb.__version__,
-        "phase1_actuals_present_in_data_raw": False,
+        "phase1_actuals_present_in_data_raw": bool(with_phase1_dates),
         "note": "Separate from phase1_provenance.json, which stays exactly as frozen. Records the "
                 "processed-data and environment hashes the original provenance lacked.",
     }
-    (OUT_DIR / "phase1_verification_addendum.json").write_text(json.dumps(addendum, indent=2))
-    print(json.dumps(addendum, indent=2))
+    if addendum_path.exists():
+        print(f"All checks passed. {addendum_path.name} already records the pre-reveal "
+              "verification and is not overwritten.")
+        print(json.dumps({k: addendum[k] for k in ("verified_at_commit", "regenerated_max_abs_diff",
+                                                     "phase1_actuals_present_in_data_raw")}, indent=2))
+    else:
+        addendum_path.write_text(json.dumps(addendum, indent=2))
+        print(json.dumps(addendum, indent=2))
 
 
 if __name__ == "__main__":
