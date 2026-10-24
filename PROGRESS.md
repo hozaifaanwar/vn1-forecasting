@@ -344,7 +344,8 @@ Forecasting with Python*.
     series, including 143,593 units on 4,522 series that sold nothing;
     sparse segment over-forecast by 54%.
   - Feature defect found: all lags, including `lag_52`, are measured from
-    the origin, so the "last year" lag never matches the target week.
+    the origin, so the "last year" lag matches the target week only at
+    horizon 1, drifting up to 12 weeks off by horizon 13 (D013 correction).
   - D012's carried-forward rule replaced (D013): the pre-written rule picks
     the primary, with no post-hoc overrides; season-matched evidence needs
     ≥2 independent seasons; default to combining when the comparisons

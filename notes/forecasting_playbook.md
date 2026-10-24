@@ -28,7 +28,7 @@ DFBP = Vandeput, *Demand Forecasting Best Practices* (2023).
 ## B. Features
 
 **4. In direct multi-horizon models, seasonal features must line up with the target week.**
-- *Mistake:* `lag_52` was measured back from the origin, so it held one value for all 13 horizons and never matched "the same week last year".
+- *Mistake:* `lag_52` was measured back from the origin, so it held one value for all 13 horizons. It matched "the same week last year" only for horizon 1, and by horizon 13 it pointed 12 weeks too early.
 - *Apply:* for horizon *h* from origin *o*, use `y[o + h − 52]` (known at the origin while *h* < 52). Do the same for `−104` and for windows around those weeks.
 - *Source:* J&T ch. 6, "Seasonal rolling window aggregations" (p. 134): windows of `y[T−M], y[T−2M], …`.
 
@@ -67,6 +67,7 @@ DFBP = Vandeput, *Demand Forecasting Best Practices* (2023).
 **11. Count independent seasons, not origins.**
 - *Mistake:* five weekly origins in one season, sharing two trained models, were treated as strong evidence.
 - *Apply:* overlapping origins are about one data point. Require at least two independent seasons before letting season-specific evidence decide anything.
+- *Also:* rolling origins 4 weeks apart with 13-week targets share most of their target weeks, so "15 origins" is real evidence but not 15 independent experiments. Look at the size and concentration of wins, not just the count: LightGBM's 8–7 win count over MA4 hid a near-zero median gap, and one origin drove most of its mean advantage.
 
 **12. When reliable evidence disagrees, test a combination.**
 - *Lesson:* LightGBM forecast too high, MA4 too low, and their average was within 0.6% of actual.
@@ -118,3 +119,21 @@ DFBP = Vandeput, *Demand Forecasting Best Practices* (2023).
 
 **22. Don't use hindsight that real competitors couldn't have had.**
 - *Apply:* post-event write-ups of the outcome are off-limits when designing a forecast meant to show a fair result. General, timeless practice is fine.
+
+## G. Why validation missed the lag_52 problem
+
+**23. Test what a feature means, not just that the code runs.**
+- *Mistake:* the only lag test checked `lag_1` and `lag_2` at horizon 1. Nothing checked `lag_52`, or any lag at horizons 2–13. The leakage test passes equally for the right and the wrong seasonal lag, so it couldn't tell them apart.
+- *Apply:* write each feature's definition in words ("sales in the same week of last year as the *target* week"), then test that definition at several horizons, including the last one.
+
+**24. Name features by what they actually measure.**
+- *Mistake:* the name `lag_52` suggested "52 weeks before the target". It was really "51 weeks before the origin" (the origin week itself is `lag_1`).
+- *Apply:* make the reference point part of the name, e.g. `origin_lag_52` vs. `target_lag_52`, so a misreading is visible in the name.
+
+**25. Run the diagnostics during validation, not only after the reveal.**
+- *Mistake:* error by horizon, volume placed on series that later sell nothing, share of series over-forecast and per-segment scores were only examined after Phase 1. In validation the combined score looked competitive.
+- *Apply:* make these part of every validation report, so an allocation or horizon problem shows up before a forecast is frozen.
+
+**26. An advantage that comes from one origin is a warning, not a strength.**
+- *Mistake:* the leave-one-out check showed LightGBM's mean edge over MA4 came almost entirely from one year-end origin. We read that as "LightGBM handles seasonality"; it was also a sign the advantage was fragile.
+- *Apply:* when one origin drives a result, treat the result as unproven and look for a second independent case before relying on it.
