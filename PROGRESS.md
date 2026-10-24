@@ -72,8 +72,10 @@ Forecasting with Python*.
     savefig) crashes the kernel in the vn1 env (matplotlib 3.11.1 + numpy
     2.4.6 + freetype 2.14.3, conda-forge builds). Plain line plots
     (ax.plot) work. Worked around with a text-based bucketed distribution
-    instead of a histogram. Not yet fixed — revisit when plotting is
-    actually needed (e.g. residual/forecast plots).
+    instead of a histogram. **Fixed in Session 8:** the real cause was
+    numpy's MKL maths library (its Intel OpenMP threading layer crashed
+    every `np.dot`, code 0xC06D007F), not matplotlib. Switched `vn1` to
+    OpenBLAS; all plots now work.
   - `pytest` added to `environment.yml` and installed in `vn1`. 24 unit
     tests added (tests/test_data.py, test_metrics.py, test_backtest.py),
     all passing: merge-completeness/duplicate-key rejection, within-series

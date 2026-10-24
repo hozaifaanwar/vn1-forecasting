@@ -8,6 +8,10 @@ dependencies:
   - python=3.11
   - pandas=2.3.3
   - numpy=2.4.6
+  # OpenBLAS, not MKL: MKL 2026.1's default (Intel OpenMP) threading layer
+  # crashed every np.dot on Windows (0xC06D007F), which broke all matplotlib
+  # rendering. See PROGRESS.md Session 8.
+  - libblas=*=*openblas
   - pyarrow=25.0.0
   - scikit-learn=1.9.0
   - lightgbm=4.7.0
