@@ -417,8 +417,10 @@ all-season rolling CV blend 0.5387 / LightGBM 0.5482 / MA4 0.5834.
 1. **Learner step:** write a five-sentence interpretation of Phase 1 in
    your own words (prediction vs. outcome, what it says about the
    reasoning) in `notes/phase1_predictions.md` or a new note.
-2. Add Phase 1 to the dataset: extend `scripts/build_dataset.py` to build
-   Phase 0 + Phase 1 (183 weeks), with the same validation checks.
+2. [DONE] Phase 0 + Phase 1 dataset: `python scripts/build_dataset.py
+   --through phase1` → `data/processed/vn1_long_p0p1.parquet` (183 weeks,
+   2,754,699 rows; Phase 0 rows identical to `vn1_long.parquet`, which is
+   unchanged). Freeze re-verified afterwards.
 3. **Learner-led demand session** on Phase 0 + Phase 1: which clients,
    warehouses and products drove the Nov 20 / Dec 11 peaks; how
    concentrated the Q4 rise was; the Christmas/New Year drop; spikes;
@@ -478,10 +480,9 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-Session 8 — the user writes a five-sentence interpretation of the Phase 1
-result in their own words; then extend the dataset to Phase 0 + Phase 1 and
-run a learner-led demand session on what drove the Q4 peaks, before any
-Phase 2 modelling.
+Session 8 — the learner-led demand session on Phase 0 + Phase 1
+(`vn1_long_p0p1.parquet`), working through the six questions in
+`notes/phase2_strategy.md`, before any Phase 2 modelling or D014.
 
 ## Session-end rule
 End every session by updating this file: what got done, the latest score,
