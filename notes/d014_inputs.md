@@ -29,3 +29,8 @@ still open and will be set from the benchmark-only calibration.
 
 - Session 8 (Q2 and the addendum) used actual Jan–Apr 2022 and 2023 outcomes, which are the windows of the January season-matched backtests. Those backtests are therefore not untouched for the January-adjusted MA4 and the series-level ratios; the all-season cross-validation gets more weight.
 - The January finding matches the off-limits retrospective (D011). It is used only because it comes from Phase 0 data, and it must win the pre-written backtests.
+
+## Added after the feasibility check (before any calibration result was seen)
+
+- **Jan 2022 cannot host any LightGBM-based model.** With the frozen procedure, origins 76–80 (2021-12-20 → 2022-01-17) leave zero training origins (52-week lookback, then fit and early-stopping origins). Jan 2023 (origins 128–132: 10–11 fit origins) and the Phase 1 replay (origin 169: 21) are feasible.
+- **Learner's choice (option a):** Jan 2022 is used for MA-family candidates only (MA4, MA12, the January-adjusted MA4), so the January-adjusted MA4 is tested in two January seasons (2022 and 2023), meeting D013's two-season requirement for season-specific evidence. LightGBM-based candidates (incumbent, LightGBM-v2, blends) get a January check on Jan 2023 only. Under D013 that is supporting evidence, not deciding evidence, and Jan 2023 was partly inspected in Session 8, so the all-season cross-validation is their main judge. No special short-history LightGBM variant is built (option b rejected: it would test a different model and add selection risk).
