@@ -482,9 +482,12 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-Session 8 — the learner-led demand session on Phase 0 + Phase 1
-(`vn1_long_p0p1.parquet`), working through the six questions in
-`notes/phase2_strategy.md`, before any Phase 2 modelling or D014.
+Session 8 (in progress) — demand questions Q1–Q6 are answered and verified
+(`notes/session8_findings.md`; Q1–Q4 in `notebooks/08_session8_demand.ipynb`,
+Q5–Q6 in `scripts/session8_q5_q6.py`). Next: the learner writes their own
+"What I see / What it means" for each question and the D014 summary, then
+D014 (Phase 2 shortlist, decision rule, thresholds) is written before any
+Phase 2 candidate runs.
 
 ## Session-end rule
 End every session by updating this file: what got done, the latest score,
