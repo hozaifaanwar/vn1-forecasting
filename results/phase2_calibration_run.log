@@ -1,6 +1,23 @@
-fold 0 done
-fold 1 done
-fold 2 done
+cv origin 92 done
+cv origin 96 done
+cv origin 100 done
+cv origin 104 done
+cv origin 108 done
+cv origin 112 done
+cv origin 116 done
+cv origin 120 done
+cv origin 124 done
+cv origin 128 done
+cv origin 132 done
+cv origin 136 done
+cv origin 140 done
+cv origin 144 done
+cv origin 148 done
+cv origin 152 done
+cv origin 156 done
+cv origin 160 done
+cv origin 164 done
+cv origin 168 done
 jan_2023 origin 128 done
 jan_2023 origin 129 done
 jan_2023 origin 130 done
@@ -8,21 +25,22 @@ jan_2023 origin 131 done
 jan_2023 origin 132 done
 
 Mean scores by comparison and model:
-                             score  mae_part  bias_part
-comparison      model                                 
-all_season_cv   MA12       0.5962    0.5119     0.0843
-                MA4        0.5707    0.4945     0.0762
-                incumbent  0.5354    0.4930     0.0425
-jan_2022        MA12       0.6924    0.5521     0.1403
-                MA4        0.7711    0.5937     0.1773
-jan_2023        MA12       0.7141    0.6338     0.0803
-                MA4        0.7846    0.6584     0.1262
-                incumbent  0.6430    0.5801     0.0629
-non_overlapping MA12       0.6285    0.5156     0.1129
-                MA4        0.6258    0.5150     0.1108
-phase1_replay   MA12       0.6597    0.5420     0.1177
-                MA4        0.6411    0.5420     0.0991
-                incumbent  0.5704    0.5642     0.0062
+                               score  mae_part  bias_part
+comparison      model                                   
+all_season_cv   MA12         0.6029    0.5163     0.0866
+                MA4          0.5782    0.5004     0.0778
+                incumbent    0.5425    0.4995     0.0430
+                lgbm_frozen  0.5694    0.5325     0.0370
+jan_2022        MA12         0.6924    0.5521     0.1403
+                MA4          0.7711    0.5937     0.1773
+jan_2023        MA12         0.7141    0.6338     0.0803
+                MA4          0.7846    0.6584     0.1262
+                incumbent    0.6430    0.5801     0.0629
+non_overlapping MA12         0.6285    0.5156     0.1129
+                MA4          0.6258    0.5150     0.1108
+phase1_replay   MA12         0.6597    0.5420     0.1177
+                MA4          0.6411    0.5420     0.0991
+                incumbent    0.5704    0.5642     0.0062
 
 Variation:
  {
@@ -33,26 +51,37 @@ Variation:
     "mean_abs": 0.03991862556967521
   },
   "cv_incumbent_minus_MA4": {
-    "n": 21,
-    "mean": -0.035215054662083925,
-    "sd_origins": 0.0681458331944817,
-    "fold_means": {
-      "0.0": -0.0082,
-      "1.0": -0.0769,
-      "2.0": -0.0206
+    "n": 20,
+    "mean": -0.0356934686563873,
+    "sd_origins": 0.06985185081959157,
+    "block_means": {
+      "A": -0.0156,
+      "B": -0.0764,
+      "C": -0.021
     },
-    "share_origins_a_wins": 0.7619047619047619
+    "share_origins_a_wins": 0.8
   },
   "cv_MA4_minus_MA12": {
-    "n": 21,
-    "mean": -0.025503299947823875,
-    "sd_origins": 0.1269170124852537,
-    "fold_means": {
-      "0.0": -0.0278,
-      "1.0": -0.0334,
-      "2.0": -0.0154
+    "n": 20,
+    "mean": -0.024651186208991475,
+    "sd_origins": 0.1301524612213651,
+    "block_means": {
+      "A": -0.0207,
+      "B": -0.04,
+      "C": -0.0154
     },
-    "share_origins_a_wins": 0.9047619047619048
+    "share_origins_a_wins": 0.9
+  },
+  "cv_incumbent_minus_lgbm_frozen": {
+    "n": 20,
+    "mean": -0.026890212830117326,
+    "sd_origins": 0.07673184676828815,
+    "block_means": {
+      "A": -0.024,
+      "B": 0.0153,
+      "C": -0.066
+    },
+    "share_origins_a_wins": 0.8
   }
 }
 

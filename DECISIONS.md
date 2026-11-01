@@ -163,3 +163,56 @@ The declared primary ranked last, behind the official MA12 benchmark. The blend 
 **Revisit if:** never for rule 1 (a permanent process constraint, like D008/D010/D011). Rules 2–4 may be revised with evidence from Phase 2.
 
 **Correction to D013 (appended, per the append-only policy):** "never matches the target week of the previous year" is inaccurate. `lag_52 = sales[origin − 51]` *does* equal the same week last year for horizon 1 (`origin + 1 − 52`). It is wrong for horizons 2–13, and the gap grows with the horizon: by horizon 13 it points 12 weeks too early. **Why validation didn't catch it:** the only lag test checks `lag_1`, `lag_2`, `roll_mean_4` and `zero_rate_12`, and only at horizon 1. No test checked `lag_52`, or any lag's meaning at horizons above 1. The leakage test passes equally for the target-aligned version, so it couldn't tell the two apart. Calendar features let the model fit an average seasonal rise well enough to look competitive across mixed-season validation, and no per-horizon or allocation diagnostics were required during validation.
+
+## D014 — Phase 2 selection rule, candidates and thresholds (committed before any challenger runs)
+
+**Status when written:** only the benchmark-only calibration has been run (`scripts/phase2_calibration.py`; outputs in `results/phase2_calibration/`). Its first version (commit 06455cf) early-stopped LightGBM on the scored origins themselves; it was revised before this entry was committed (see "Evaluation protocol" below), and its numbers are superseded. No challenger has produced a forecast or a score. Inputs: `notes/d014_inputs.md` (learner's six answers, design choices, the Jan 2022 feasibility addendum) and `notes/phase2_strategy.md`.
+
+**Candidates (fixed; no additions afterwards):**
+
+- Benchmarks, fully eligible to win: (1) MA12, (2) MA4, (3) frozen-procedure LightGBM, (4) **the incumbent**: the frozen-style 50/50 blend of (3) and (2), retrained on Phase 0 + 1.
+- Challengers: (5) **LightGBM-v2**, the feature set kept by the ablation below; (6) **January-adjusted MA4**, defined below; (7) a fixed 50/50 blend of (5) and (6).
+- Not in Phase 2: CatBoost (scope control, design choice 6); XGBoost, a standalone two-stage model and fitted ensemble weights (reasons in the strategy note). The refit-on-all procedure declared in D012's correction is **deferred** (scope control, learner's decision). It stays untested and is recorded as such.
+
+**(6) January-adjusted MA4.** Forecast = each series' MA4 level × a multiplier for the window. For each prior year available at the origin (same calendar point, 52 weeks earlier per year, its 13-week window fully observed before the current origin): portfolio ratio = total actual over the 13-week window ÷ 13 ÷ total MA4 level at that prior origin; own ratio = the same for the series, defined only when the series' MA4 level at that prior origin is at least 5 units/week. **The ≥5 line is an experimental design choice approved by the learner.** Session 8's improvement (about 25% lower absolute error, 2022 ratio → Jan–Apr 2023) was shown only for series at ≥20 units/week and is not evidence for ≥5. Each ratio is averaged over the years where it is defined. Multiplier = 0.5 × own + 0.5 × portfolio, or the portfolio ratio alone where no own ratio exists; 1 (plain MA4) where no prior year exists, and those origins are reported separately. No damping, no clipping. It applies at every origin, not only in January.
+
+**LightGBM-v2 ablation (forward, in the fixed order of the strategy note).** Groups: 1 target-aligned annual history; 2 activity/recency, including weeks since first sale and the zero rate and segment counted from the first sale; 3 aggregates; 4 trend and regime; 5 identities; 6 dormancy gate, N = 13 (forecast 0 after 13 weeks without a sale; series not yet launched are not "silent"). Each group must pass leakage tests before it is scored. A group is kept if, against the current feature set, it improves the mean-of-origin score on the **ablation origins** by at least **0.005** and wins at least **6 of their 10** origins (60%). 0.005 is half of T1, because nested variants of one model differ less from each other than different models do.
+
+**Evaluation protocol (revised before commit, at the learner's request).** Every LightGBM-based model (benchmarks and challengers alike) is evaluated by running the frozen procedure (`src/pipeline.py::frozen_forecast`) separately at each scored origin. The model sees only data up to that origin and chooses its tree count by early stopping on its own three purged internal origins. **No scored target is ever used for early stopping.** The earlier per-fold design early-stopped on the scored origins themselves, the flattering effect D012 bounded at ≤0.004, which is unacceptable for a reserved set. This is the same procedure as the Jan 2023 check, the Phase 1 replay and the real Phase 2 forecast, so the incumbent and every challenger share one protocol. Origins (step 4, exact list in `results/phase2_calibration/folds.json`):
+
+| Set | Origins | Role |
+|---|---|---|
+| Ablation | 92–128 (10) | Feature-group decisions only. Targets end by week 141. |
+| Purge gap | 132–140 (3) | Not used by the ablation: their targets reach into the reserved targets. |
+| Reserved | 144–168 (7; first target week 145) | Never seen by the ablation. |
+| All-season (T1, T2) | 92–168 (20), in blocks A 92–116, B 120–140, C 144–168 | Final comparison. |
+
+Origin 88 is dropped because the frozen procedure has no training origin there. At origins 92–100 LightGBM trains on only 1–3 origins (each about 196k rows). That is a handicap shared equally by the incumbent and the LightGBM challengers. The January checks and the Phase 1 replay play no part in the ablation.
+
+**Acceptance: a challenger replaces the incumbent only if it passes all four.**
+
+| Condition | Rule |
+|---|---|
+| T1, improvement | All-season set (20 origins, blocks A/B/C): mean-of-origin score at least **0.010** below the incumbent's, **and** a better block mean in at least 2 of 3 blocks. For (5) and (7), one of those blocks must be C, the reserved block the ablation never saw. |
+| T2, consistency | Beats the incumbent on at least **60%** of origins (12 of 20). |
+| T3, January protection | MA-family candidates, Jan 2022 and Jan 2023: in neither season worse than the reference by more than **0.03**, and the mean difference over the two seasons is negative (better). Reference: the incumbent in Jan 2023; MA12, the best plain benchmark, in Jan 2022, where no LightGBM model can be trained. LightGBM-based candidates, (5) and (7), Jan 2023 only: not worse than the incumbent by more than **0.03**. One season can block them, but under D013 rule 2 it cannot count as positive evidence for them. |
+| Phase 1 gate | Phase 1 replay (origin 169): score not worse than the incumbent's 0.5704 by more than **0.10**. Total forecast outside ±10% of actual is a reported flag, not a failure. |
+
+**Choose and fall back:** among the candidates passing all four (benchmarks included), the one with the best all-season mean becomes primary. If none passes, the incumbent stays primary. A failing candidate, combination or not, is never the fallback. D013 rule 1 applies: invalidation only for score-independent defects, no reordering, and no overrides once results are seen.
+
+**How the thresholds were set (benchmarks only; numbers from `results/phase2_calibration/`):**
+
+- Mean scores (revised protocol). All-season set: incumbent 0.5425, frozen LightGBM 0.5694, MA4 0.5782, MA12 0.6029. Jan 2022: MA12 0.6924, MA4 0.7711. Jan 2023: incumbent 0.6430, MA12 0.7141, MA4 0.7846. Phase 1 replay: incumbent 0.5704, MA4 0.6411, MA12 0.6597. The replay reproduces the scored Phase 1 results.
+- Noise. On non-overlapping origins, MA4 − MA12 has sd 0.056 per origin (n = 10). With ~6.5 effective independent origins among the 20 overlapping ones, the standard error is ≈ 0.022. That is an upper bound, because it comes from two very different models. On the all-season set, incumbent − MA4 averages −0.036 (block means A −0.016, B −0.076, C −0.021; the incumbent wins 80% of origins), and incumbent − frozen LightGBM averages −0.027 (A −0.024, B +0.015, C −0.066; wins 80%). The first protocol (06455cf) gave the incumbent 0.5354, 0.007 better; part of that gap is early stopping on the scored origins, part is the different origin set (origin 88 included) and per-fold rather than per-origin training.
+- **T1 = 0.010**, about 2% of the incumbent's 0.5425: large enough to matter for planning, and below the dissimilar-model noise bound because challengers are close relatives of the incumbent. The block condition guards against a win carried by one block. **T2 = 60%**, as decided earlier. **T3 = 0.03**, under half of the MA4–MA12 gap in either January (0.079, 0.071). **Phase 1 gate = 0.10**: it catches a failure like frozen LightGBM's (+0.164) without disqualifying MA4 (+0.071) or MA12 (+0.089). It was chosen after seeing benchmark Phase 1 scores, which is allowed (benchmarks only, no challenger) and stated here openly.
+- Thresholds were proposed by Claude and accepted by the learner (Session 8). They are never adjusted after challenger scores exist.
+
+**Reports** follow D013 rule 4 and the strategy note's list: error and bias parts, per-segment scores, weekly shape, volume on series with zero actual demand, per-fold and per-season breakdowns, and for Phase 2 the spike in the origin's last 4 weeks (Dec 11) and each candidate's implied total against the past January ratios (0.84–0.90).
+
+**Integrity notes:**
+
+- Session 8 used actual Jan–Apr 2022 and 2023 outcomes while exploring. So the January backtests are not untouched for (6) and its series-level ratios, including the ≥5 units/week eligibility line (explored there only as a correlation check; the forecast-error gain was shown for ≥20 only). This is one reason the all-season CV decides and January can only protect.
+- The January finding matches the off-limits retrospective (D011). It is used because it comes from Phase 0 data, and it must pass this rule like any other idea.
+- Spikes stay diagnostic only (question 5, delegated by the learner to Claude: under 1% of volume, weak in-window signal).
+
+**Revisit if:** never for the "no change after challenger scores exist" clause (D013 rule 1). The thresholds may be recalibrated for VN2 or later phases, from benchmarks only and before any challenger runs.

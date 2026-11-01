@@ -1,8 +1,9 @@
 """Phase 2 benchmark-only calibration (inputs to D014 thresholds).
 
 Scores ONLY the benchmarks — MA4, MA12 and the incumbent (frozen-style 50/50
-LightGBM + MA4 blend) — on every comparison D014 will use, and records the
-exact folds. No challenger is built or scored here. Outputs go to
+LightGBM + MA4 blend) and frozen LightGBM alone — on every comparison D014
+will use, and records the exact origins. Every LightGBM model is the frozen
+procedure run at its own origin (no early stopping on scored targets). No challenger is built or scored here. Outputs go to
 results/phase2_calibration/ and are committed before D014 and before any
 challenger runs (notes/d014_inputs.md, design choice 7).
 
@@ -23,10 +24,8 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
 from src.data import KEY  # noqa: E402
-from src.features import build_direct_horizon_matrix, rolling_origin_folds  # noqa: E402
 from src.metrics import vn1_score_breakdown  # noqa: E402
-from src.models.lightgbm_model import train_lgbm  # noqa: E402
-from src.pipeline import FROZEN_CONFIG, HORIZONS, SEGMENT_DTYPE, frozen_forecast  # noqa: E402
+from src.pipeline import HORIZONS, frozen_forecast  # noqa: E402
 
 OUT = ROOT / "results" / "phase2_calibration"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -65,26 +64,26 @@ def ma_rows(comparison, origins, fold=None):
             add(comparison, o, name, actual, np.repeat(ma(o, k)[:, None], H, axis=1), fold)
 
 
-# 1. All-season rolling CV: exact folds, MA benchmarks + incumbent (per-fold LightGBM, as Session 5/6)
-pool = list(range(52, len(dates) - H, 4))
-folds = rolling_origin_folds(pool, HORIZONS, n_folds=3)
-fold_record = []
-for fi, (fit_o, val_o) in enumerate(folds):
-    fold_record.append({"fold": fi, "fit_origins": fit_o, "val_origins": val_o,
-                        "val_dates": [str(dates[o].date()) for o in val_o]})
-    ma_rows("all_season_cv", val_o, fi)
-    fm = build_direct_horizon_matrix(df, fit_o, HORIZONS)
-    vm = build_direct_horizon_matrix(df, val_o, HORIZONS)
-    for m in (fm, vm):
-        m["segment"] = m["segment"].astype(SEGMENT_DTYPE)
-    feats = [c for c in fm.columns if c not in (*KEY, "origin_date", "target_date", "target")]
-    _, lgbm = train_lgbm(fm, vm, feats, categorical_feature=["segment"], origin_col="origin_date",
-                         random_state=FROZEN_CONFIG["random_state"], **FROZEN_CONFIG["lgb_params"])
-    blend = 0.5 * lgbm + 0.5 * vm["roll_mean_4"].to_numpy()
-    for o in val_o:
-        mask = (vm["origin_date"] == dates[o]).to_numpy()
-        add("all_season_cv", o, "incumbent", vm.loc[mask, "target"].to_numpy(), blend[mask], fi)
-    print(f"fold {fi} done", flush=True)
+# 1. All-season evaluation: one frozen-procedure model per scored origin (D014 revision).
+#    Each model sees only data up to its origin and early-stops on its own purged
+#    internal origins, so no scored target is ever used for early stopping.
+#    Origin 88 is dropped: the frozen procedure has no training origin there.
+#    Blocks: A 92-116, B 120-140, C 144-168 (C = reserved; the ablation never sees it).
+#    Ablation set = 92-128 (targets end <= week 141 < 145, the first reserved target).
+cv_origins = list(range(92, len(dates) - H, 4))
+assert cv_origins[0] == 92 and cv_origins[-1] == 168 and len(cv_origins) == 20
+block_of = {o: ("A" if o <= 116 else "B" if o <= 140 else "C") for o in cv_origins}
+ablation_origins = [o for o in cv_origins if o + H < 145]
+reserved_origins = [o for o in cv_origins if block_of[o] == "C"]
+assert ablation_origins == list(range(92, 129, 4)) and min(reserved_origins) + 1 == 145
+for o in cv_origins:
+    actual = vals[:, o + 1: o + 1 + H]
+    for name, k in [("MA4", 4), ("MA12", 12)]:
+        add("all_season_cv", o, name, actual, np.repeat(ma(o, k)[:, None], H, axis=1), block_of[o])
+    fc, _, info = frozen_forecast(df, o)
+    add("all_season_cv", o, "incumbent", fc["target"].to_numpy(), fc["blend"].to_numpy(), block_of[o])
+    add("all_season_cv", o, "lgbm_frozen", fc["target"].to_numpy(), fc["lgbm"].to_numpy(), block_of[o])
+    print(f"cv origin {o} done", flush=True)
 
 # 2. Non-overlapping origins (13 weeks apart) for benchmark-vs-benchmark variation
 non_overlap = list(range(52, len(dates) - H, H))
@@ -120,13 +119,16 @@ d = no["MA4"] - no["MA12"]
 var["non_overlapping_MA4_minus_MA12"] = {"n": int(d.size), "mean": d.mean(), "sd": d.std(ddof=1),
                                          "mean_abs": d.abs().mean()}
 cv = res.query("comparison == 'all_season_cv'").pivot_table(index=["fold", "origin_idx"], columns="model", values="score")
-for a, b in [("incumbent", "MA4"), ("MA4", "MA12")]:
+for a, b in [("incumbent", "MA4"), ("MA4", "MA12"), ("incumbent", "lgbm_frozen")]:
     dd = cv[a] - cv[b]
     var[f"cv_{a}_minus_{b}"] = {"n": int(dd.size), "mean": dd.mean(), "sd_origins": dd.std(ddof=1),
-                                "fold_means": dd.groupby(level="fold").mean().round(4).to_dict(),
+                                "block_means": dd.groupby(level="fold").mean().round(4).to_dict(),
                                 "share_origins_a_wins": float((dd < 0).mean())}
 
-(OUT / "folds.json").write_text(json.dumps({"origin_pool": pool, "folds": fold_record,
+(OUT / "folds.json").write_text(json.dumps({"cv_origins": cv_origins,
+                                            "blocks": {b: [o for o in cv_origins if block_of[o] == b] for b in "ABC"},
+                                            "ablation_origins": ablation_origins, "reserved_origins": reserved_origins,
+                                            "cv_dates": {o: str(dates[o].date()) for o in cv_origins},
                                             "non_overlapping_origins": non_overlap, "january": jan,
                                             "phase1_replay": [169]}, indent=2))
 (OUT / "variation.json").write_text(json.dumps(var, indent=2, default=float))
