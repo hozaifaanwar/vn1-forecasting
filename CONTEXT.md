@@ -48,6 +48,9 @@ Keep these distinctions clear:
   - max zero-rate = 0.9941
   - every series has at least one positive sale (0 series with total or mean sales = 0; minimum total sales per series = 1)
 - **[VERIFIED]** The weekly grid is complete.
+- **[VERIFIED]** 62.0% of all Phase 0 zero-sales observations occur before a series' first sale (pre-launch zeros; matches Session 3's leading-zero count, 1,139,262 of 1,836,437). Only 14.8% of series sell in the first data week; 61% first sell more than 12 months after the data starts (Session 8).
+- **[VERIFIED]** Every series in the dataset first sells within Phase 0; no series first sells in Phase 1. The competition's series list appears to contain only series with Phase 0 sales.
+- **[DERIVED]** Zero rates and segment labels that count pre-launch weeks misclassify late starters: 40.4% of series change segment when only weeks after the first sale are counted (Session 8, `notes/session8_findings.md`).
 - **[VERIFIED]** No inventory file is currently available.
 - **[VERIFIED]** No static product/customer metadata is currently available.
 - **[DERIVED]** Price appears to be transaction-derived and sticky: it is recorded on sale weeks and missing on many zero-sale weeks.

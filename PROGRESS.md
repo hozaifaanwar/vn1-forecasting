@@ -357,6 +357,36 @@ Forecasting with Python*.
   - `src/scoring.py` + tests (57/57 passing). Results in
     `results/phase1_scores.csv`, `results/phase1_weekly_totals.csv`,
     `results/phase1_scoring.json`.
+  - Read-only results notebook added later:
+    `notebooks/07_session7_phase1_results.ipynb`.
+
+- [IN PROGRESS] Session 8 — learner-led demand analysis on Phase 0 + 1.
+  Facts for all six questions verified with a second implementation;
+  full fact sheet in `notes/session8_findings.md`. Notebook
+  `notebooks/08_session8_demand.ipynb` (Q1–Q6, one clean in-order run),
+  script `scripts/session8_q5_q6.py`.
+  - **Q1** Q4 2023 peak highly concentrated: top 10% of series = 92% of the
+    rise; 62% of series did not rise.
+  - **Q2** Jan–Apr (the Phase 2 window) fell below the January MA4 level in
+    2021, 2022 and 2023: MA4's total would have been 11–19% too high.
+    Matches the off-limits retrospective's account of Phase 2 (D011), but
+    found from Phase 0 data only; recorded for transparency.
+  - **Q3** Summer 2023 grew normally (+35.6% y/y); Q4 2023 broke the trend
+    (+13.2% y/y vs. 30–40% before). Same items tend to peak each year (45%
+    overlap, ~9× chance) but last year's top risers rose ~70% less.
+  - **Q4** Spikes rare (5.3% of series, 0.9% of units); recur in ISO weeks
+    28/41/47; weeks 6 and 13 (inside Phase 2) mildly elevated.
+  - **Q5** 62% of Phase 0 zeros are pre-launch; 40.4% of series change
+    segment once those are excluded; 24.8% of series have under a year of
+    history at the Phase 2 origin.
+  - **Q6** Series silent 13+ weeks produce ~0.5% of future demand; the
+    zero-share "fall" (71.8% → 56.2%) is an artefact of pre-launch zeros.
+  - Environment fix: the long-standing plotting crash was numpy's MKL
+    (`np.dot` crashed, 0xC06D007F), not matplotlib; `vn1` switched to
+    OpenBLAS. Tests 59/59, Phase 1 freeze still regenerates exactly.
+  - Lessons recorded in `notes/forecasting_playbook.md` §H–I (27–38).
+  - Still open: the learner's own "What I see / What it means" cells and
+    answers to the five "Questions for D014" in the findings note.
 
 ---
 
@@ -393,6 +423,16 @@ custom one during early stopping) can distort several conclusions at
 once, not just the headline number — verified directly rather than
 assumed, three times, across three review passes.
 
+### Covered (Session 8)
+Exploratory demand analysis before modelling: concentration of a seasonal
+effect (cumulative-share curve); year-on-year comparison of windows to
+tell "weak season" from "high baseline"; overlap of top risers across
+years (persistence vs. chance); benchmark implied bias at the forecast
+origin in past seasons; isolated-spike detection with a threshold
+sensitivity check; first-sale (launch) detection and pre-launch zeros;
+dormancy and reactivation rates; gross vs. net sums; debugging a native
+crash to its root cause.
+
 ### Covered (Session 6)
 Forecast combination (equal-weight averaging, and why fixed weights are
 preferred to weights fitted on the same validation origins); pre-
@@ -415,24 +455,20 @@ all-season rolling CV blend 0.5387 / LightGBM 0.5482 / MA4 0.5834.
 
 ## Next VN1 work
 
-### Immediate — Session 8: understand Phase 1, then plan Phase 2
-1. **Learner step:** write a five-sentence interpretation of Phase 1 in
-   your own words (prediction vs. outcome, what it says about the
-   reasoning) in `notes/phase1_predictions.md` or a new note.
-2. [DONE] Phase 0 + Phase 1 dataset: `python scripts/build_dataset.py
-   --through phase1` → `data/processed/vn1_long_p0p1.parquet` (183 weeks,
-   2,754,699 rows; Phase 0 rows identical to `vn1_long.parquet`, which is
-   unchanged). Freeze re-verified afterwards.
-3. **Learner-led demand session** on Phase 0 + Phase 1: which clients,
-   warehouses and products drove the Nov 20 / Dec 11 peaks; how
-   concentrated the Q4 rise was; the Christmas/New Year drop; spikes;
-   pre-launch zeros.
-4. Write the Phase 2 shortlist and decision rule (D014) per D013 *before*
-   running any candidate. Candidates discussed so far: current LightGBM,
-   target-aligned annual lag + aggregate seasonal features, refit-on-all,
-   seasonally adjusted MA4, a sparse/two-stage candidate, CatBoost with
-   series IDs, fixed-weight blends. D011 applies: nothing from
-   post-competition write-ups.
+### Immediate — finish Session 8, then D014
+1. [DONE] Learner's Phase 1 interpretation (`notes/phase1_predictions.md`).
+2. [DONE] Phase 0 + Phase 1 dataset (`data/processed/vn1_long_p0p1.parquet`).
+3. [DONE] Demand questions Q1–Q6, verified (`notes/session8_findings.md`).
+4. **Learner:** write "What I see / What it means" for Q1–Q6 in the
+   notebook, and answer the five "Questions for D014" at the end of the
+   findings note.
+5. **Write D014** before any Phase 2 candidate runs: shortlist, feature
+   groups, validation design (all-season CV + Jan 2022 / Jan 2023
+   season-matched + Phase 1 replay), decision rule, and thresholds T1–T4
+   set from benchmark noise (`notes/phase2_strategy.md`). Session 8
+   findings to weigh: Jan–Apr drop below the MA4 level (Q2); "which"
+   predictable but "how much" not (Q1, Q3); count from first sale (Q5);
+   near-zero for long-dormant series (Q6). D011 applies.
 
 ### Longer-term (after the Phase 1 freeze, or in parallel on Phase 0 only)
 - Revisit D006 (recursive vs. direct) and D007 (Tweedie vs. L2) if a
@@ -482,12 +518,10 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-Session 8 (in progress) — demand questions Q1–Q6 are answered and verified
-(`notes/session8_findings.md`; Q1–Q4 in `notebooks/08_session8_demand.ipynb`,
-Q5–Q6 in `scripts/session8_q5_q6.py`). Next: the learner writes their own
-"What I see / What it means" for each question and the D014 summary, then
-D014 (Phase 2 shortlist, decision rule, thresholds) is written before any
-Phase 2 candidate runs.
+The learner fills in "What I see / What it means" for Q1–Q6 in
+`notebooks/08_session8_demand.ipynb` and answers the five "Questions for
+D014" in `notes/session8_findings.md`; then write D014 (Phase 2
+shortlist, decision rule, thresholds) before running any Phase 2 candidate.
 
 ## Session-end rule
 End every session by updating this file: what got done, the latest score,

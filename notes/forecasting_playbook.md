@@ -137,3 +137,55 @@ DFBP = Vandeput, *Demand Forecasting Best Practices* (2023).
 **26. An advantage that comes from one origin is a warning, not a strength.**
 - *Mistake:* the leave-one-out check showed LightGBM's mean edge over MA4 came almost entirely from one year-end origin. We read that as "LightGBM handles seasonality"; it was also a sign the advantage was fragile.
 - *Apply:* when one origin drives a result, treat the result as unproven and look for a second independent case before relying on it.
+
+## H. Demand analysis lessons (Session 8)
+
+**27. Separate "not launched yet" from "didn't sell".**
+- *Finding:* 62% of all Phase 0 zeros came before a series' first sale. Counting them, 40% of series got the wrong active/intermittent/sparse label, and the weekly zero share appeared to fall from 72% to 56% when, among series already selling, it actually rose.
+- *Apply:* find each series' first sale before computing zero rates, segments or "same week last year" features. Count from the first sale, and add a "weeks since first sale" feature.
+
+**28. Ask whether a seasonal effect is broad or concentrated.**
+- *Finding:* the top 10% of series made 92% of the Q4 2023 rise, and 62% of series didn't rise at all.
+- *Apply:* before modelling a seasonal effect, rank series by their uplift and compute the cumulative share. A concentrated effect needs features that say *which* series take part.
+
+**29. Last year predicts *which* items peak better than *how much*.**
+- *Finding:* 45% of 2023's top risers were also 2022's (about 9× chance), but those items rose about 70% less in 2023.
+- *Apply:* use last year's pattern to rank participation, and damp or check its size against recent behaviour.
+
+**30. When a seasonal rise looks weak, check whether the season or the starting point changed.**
+- *Finding:* summer 2023 grew normally (+36% year on year) but Q4 2023 grew only +13%. The season broke the trend, not the baseline.
+- *Apply:* compare both windows year on year, not just the rise within one year.
+
+**31. Measure what a simple benchmark would do at the forecast origin, in past seasons.**
+- *Finding:* at the first Monday of January in 2021–2023, an MA4 level was 11–19% above actual Jan–Apr demand in total.
+- *Apply:* for the season you'll forecast, compute the benchmark's implied total against past actuals. It shows the bias risk before any model is built. (This checks the total, the bias part only; the per-series test is a backtest.)
+
+**32. Long-silent series produce almost no future demand.**
+- *Finding:* series quiet for 13+ weeks sold again 23% of the time but produced only 0.55% of next-13-week demand (52+ weeks: 0.05%).
+- *Apply:* near-zero forecasts for long-dormant series cost little and avoid spreading volume across them. Test this as a rule; don't assume it.
+
+**33. Rare spikes deserve a check, not a model.**
+- *Finding:* isolated spikes hit 5% of series and held under 1% of units, consistently across thresholds. Some recur in fixed calendar weeks.
+- *Apply:* measure the volume they carry under several thresholds before building anything for them. Watch for spikes inside a moving-average window at the origin.
+
+**34. Gross and net are different numbers; say which one.**
+- *Mistake:* "the peak added 155,825 units a week" counted only rising series; net of falling series it was about 117,000.
+- *Apply:* when summing changes across items, report risers, fallers and net separately.
+
+## I. Working practice (tooling lessons from Session 8)
+
+**35. A crash blamed on one library may come from a shared dependency.**
+- *Mistake:* for five sessions, "matplotlib bar charts crash" was recorded as a matplotlib limitation. The real cause was numpy's MKL maths library crashing every `np.dot` (Windows code 0xC06D007F), which also broke all plotting and would have broken any linear-algebra model.
+- *Apply:* when a native crash appears, get the crashing Python line (`python -X faulthandler`) and the Windows error code. Then test the lowest-level call that fails before accepting a workaround.
+
+**36. Pin a notebook to the right kernel.**
+- *Mistake:* notebooks set to the generic `python3` kernel ran in base Anaconda, whose older pyarrow couldn't read the data.
+- *Apply:* set the notebook's kernelspec to the project environment (`vn1`) and execute with `--ExecutePreprocessor.kernel_name=vn1`.
+
+**37. Never let a pipeline hide a failure before a commit.**
+- *Mistake:* a script with a broken path string was committed and pushed, because `command | tail` reported the exit code of `tail`, not of the script.
+- *Apply:* check the real exit code (`set -o pipefail`, or capture to a file and test `$?`). Parse-check generated code (`ast.parse`) before writing it into a file or notebook. Only commit after a clean run.
+
+**38. Save, then verify from the saved file.**
+- *Mistake:* several times the notebook on disk didn't contain code that had been run in the editor.
+- *Apply:* save before asking for a review, and review outputs from the saved file. Re-run a notebook top to bottom before committing it, so its outputs come from one in-order run.
