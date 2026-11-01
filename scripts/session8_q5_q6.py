@@ -10,12 +10,19 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-os.chdir(r"D:\vn1-forecasting")
-sys.path.insert(0, r"D:\vn1-forecasting")
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+while not (ROOT / "CONTEXT.md").is_file():
+    if ROOT == ROOT.parent:
+        raise FileNotFoundError("Could not find CONTEXT.md in any parent directory")
+    ROOT = ROOT.parent
+os.chdir(ROOT)
+sys.path.insert(0, str(ROOT))
 from src.data import KEY
 from src.features import classify_segment
 
-SP = r"D:n1-forecastingeportsigures"
+SP = str(ROOT / "reports" / "figures")
 os.makedirs(SP, exist_ok=True)
 df = pd.read_parquet("data/processed/vn1_long_p0p1.parquet")
 PHASE1_START = pd.Timestamp("2023-10-09")
@@ -84,11 +91,11 @@ print(f"First sold within 52 weeks before the Phase 2 origin: {recent.sum():,} (
 fig, ax = plt.subplots(figsize=(11, 4))
 ax.plot(by_q.index.astype(str), by_q.values, marker="o")
 ax.set_title("Q5: series by quarter of first sale"); ax.set_ylabel("series"); ax.grid(alpha=0.3)
-plt.xticks(rotation=45); fig.tight_layout(); fig.savefig(f"{SP}\\q5_first_sale.png", dpi=80)
+plt.xticks(rotation=45); fig.tight_layout(); fig.savefig(f"{SP}/\q5_first_sale.png", dpi=80)
 fig, ax = plt.subplots(figsize=(9, 4))
 ax.plot(range(n_after + 1), share_selling, marker="o")
 ax.set_title("Q5: after the first sale, share of late starters selling each week")
-ax.set_xlabel("weeks since first sale"); ax.grid(alpha=0.3); fig.tight_layout(); fig.savefig(f"{SP}\\q5_ramp.png", dpi=80)
+ax.set_xlabel("weeks since first sale"); ax.grid(alpha=0.3); fig.tight_layout(); fig.savefig(f"{SP}/\q5_ramp.png", dpi=80)
 
 # ---------------- Q6: activity ----------------
 print("\n" + "=" * 70, "\nQ6 ACTIVITY")
@@ -150,5 +157,5 @@ ax.plot(weeks, zero_share_week.values, label="all series")
 ax.plot(weeks, zero_among_started.values, label="only series that had already started selling")
 ax.axvline(PHASE1_START, color="red", ls="--", label="Phase 1 start")
 ax.set_title("Q6: share of series with zero sales each week"); ax.legend(); ax.grid(alpha=0.3)
-fig.tight_layout(); fig.savefig(f"{SP}\\q6_zero_share.png", dpi=80)
+fig.tight_layout(); fig.savefig(f"{SP}/\q6_zero_share.png", dpi=80)
 print("\nplots saved")
