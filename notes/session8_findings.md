@@ -115,3 +115,30 @@ Spike = ≥5× the series' median non-zero week, ≥20 units, both neighbouring 
 5. Q4: spikes are rare (<2% of volume). The big recurring spike weeks (28, 41, 47) are outside the
    Phase 2 window, but weeks 6 and 13 inside it are mildly elevated in more than one year. Worth a
    diagnostic in the January backtests, or low priority?
+
+## Addendum — series-level January behaviour and where the error is (after the learner's idea)
+
+The learner proposed using each series' own past January behaviour, and treating new products with
+their own (short) history. Checked on Phase 0 + Phase 1 data:
+
+- **Series-level January ratios persist.** Ratio = Jan–Apr avg ÷ last-4-weeks level at the January
+  origin. Among series with a last-4 level of ≥5 / ≥20 / ≥50 units/week in both 2022 and 2023
+  (1,868 / 1,051 / 593 series), the correlation of log ratios 2022 vs. 2023 is 0.66 / 0.75 / 0.79,
+  and 73% / 77% / 81% fall on the same side of the portfolio ratio both years.
+- **One-year test (2022 ratio → forecast Jan–Apr 2023), 1,051 series with level ≥20:** absolute
+  error, portfolio ratio 69,039; own 2022 ratio 54,732; 50/50 mix of own and portfolio ratio 51,947
+  (≈25% below portfolio). Bias: −10,259 / −25,054 / −17,657. One year only; higher-volume series only.
+- **Where Phase 1 error came from, by behaviour after the first sale** (blend; LightGBM similar):
+  truly active series = 88% of demand and 78% of absolute error (0.50 error per unit); truly
+  intermittent = 12% / 20% (0.94); truly sparse = 0.2% / 1.7% (5.8). 61% of LightGBM's net
+  over-forecast came from truly active series. The old labels (pre-launch zeros included) put
+  "intermittent" at 49% of demand, which overstated its weight.
+
+**Integrity note for D014:** this addendum and Q2 used actual Jan–Apr 2022 and 2023 outcomes, which
+are the windows of the planned January season-matched backtests. Those backtests are therefore not
+untouched for designs motivated here (the January-adjusted MA4, series-level ratios). D014 must state
+this and weight the all-season cross-validation accordingly.
+
+**Question for D014 (6):** replace the portfolio-only January multiplier with a 50/50 mix of each
+series' own past January ratio and the portfolio ratio (portfolio ratio only where a series lacks
+enough history), keeping it one candidate?
