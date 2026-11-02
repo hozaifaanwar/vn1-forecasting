@@ -1,0 +1,198 @@
+LightGBM-v2 spec: {'groups': ('annual',), 'gate_weeks': None}
+origin 92 done
+origin 96 done
+origin 100 done
+origin 104 done
+origin 108 done
+origin 112 done
+origin 116 done
+origin 120 done
+origin 124 done
+origin 128 done
+origin 132 done
+origin 136 done
+origin 140 done
+origin 144 done
+origin 148 done
+origin 152 done
+origin 156 done
+origin 160 done
+origin 164 done
+origin 168 done
+origin 76 done
+origin 77 done
+origin 78 done
+origin 79 done
+origin 80 done
+origin 129 done
+origin 130 done
+origin 131 done
+origin 169 done
+benchmarks match calibration on 108 rows
+
+Mean scores:
+                              score  mae_part  bias_part  bias_pct
+comparison    model                                              
+all_season    MA12          0.6029    0.5163     0.0866    0.0621
+              MA4           0.5782    0.5004     0.0778    0.0440
+              adj_MA4       0.6971    0.5900     0.1070   -0.1020
+              blend_v2_adj  0.5908    0.5299     0.0609   -0.0539
+              incumbent     0.5425    0.4995     0.0430    0.0225
+              lgbm_frozen   0.5694    0.5325     0.0370    0.0010
+              lgbm_v2       0.5652    0.5269     0.0383   -0.0058
+jan_2022      MA12          0.6924    0.5521     0.1403   -0.1403
+              MA4           0.7711    0.5937     0.1773   -0.1773
+              adj_MA4       0.7605    0.6128     0.1477   -0.1477
+jan_2023      MA12          0.7141    0.6338     0.0803   -0.0803
+              MA4           0.7846    0.6584     0.1262   -0.1262
+              adj_MA4       0.6760    0.6168     0.0592   -0.0592
+              blend_v2_adj  0.5912    0.5553     0.0359   -0.0359
+              incumbent     0.6430    0.5801     0.0629   -0.0568
+              lgbm_frozen   0.5677    0.5408     0.0269    0.0127
+              lgbm_v2       0.5725    0.5447     0.0278   -0.0126
+phase1_replay MA12          0.6597    0.5420     0.1177    0.1177
+              MA4           0.6411    0.5420     0.0991    0.0991
+              adj_MA4       1.2997    0.8796     0.4200   -0.4200
+              blend_v2_adj  0.9505    0.6951     0.2554   -0.2554
+              incumbent     0.5704    0.5642     0.0062   -0.0062
+              lgbm_frozen   0.7341    0.6226     0.1115   -0.1115
+              lgbm_v2       0.6559    0.5651     0.0907   -0.0907
+
+Decision:
+ {
+  "primary": "incumbent",
+  "passing": [],
+  "incumbent_all_season_mean": 0.542537734522046,
+  "thresholds": {
+    "T1": 0.01,
+    "T2": 0.6,
+    "T3": 0.03,
+    "phase1_tol": 0.1
+  },
+  "lightgbm_v2": {
+    "groups": [
+      "annual"
+    ],
+    "gate_weeks": null
+  },
+  "candidates": {
+    "MA12": {
+      "all_season_mean": 0.6028823893874247,
+      "diff_vs_incumbent": 0.06034465486537878,
+      "block_diffs": {
+        "A": 0.0363,
+        "B": 0.1164,
+        "C": 0.0363
+      },
+      "wins": 1,
+      "n": 20,
+      "jan_2022_vs_MA12": 0.0,
+      "jan_2023_vs_incumbent": 0.0711474241245007,
+      "phase1_replay_diff": 0.08930655486415218,
+      "phase1_bias_flag": true,
+      "T1": false,
+      "T2": false,
+      "T3": false,
+      "phase1_gate": true,
+      "passes_all": false
+    },
+    "MA4": {
+      "all_season_mean": 0.5782312031784334,
+      "diff_vs_incumbent": 0.0356934686563873,
+      "block_diffs": {
+        "A": 0.0156,
+        "B": 0.0764,
+        "C": 0.021
+      },
+      "wins": 4,
+      "n": 20,
+      "jan_2022_vs_MA12": 0.07861654616385916,
+      "jan_2023_vs_incumbent": 0.14163308625029547,
+      "phase1_replay_diff": 0.07072178644503457,
+      "phase1_bias_flag": false,
+      "T1": false,
+      "T2": false,
+      "T3": false,
+      "phase1_gate": true,
+      "passes_all": false
+    },
+    "lgbm_frozen": {
+      "all_season_mean": 0.5694279473521633,
+      "diff_vs_incumbent": 0.026890212830117326,
+      "block_diffs": {
+        "A": 0.024,
+        "B": -0.0153,
+        "C": 0.066
+      },
+      "wins": 4,
+      "n": 20,
+      "jan_2023_vs_incumbent": -0.07524273218982891,
+      "phase1_replay_diff": 0.16368991049387538,
+      "phase1_bias_flag": true,
+      "T1": false,
+      "T2": false,
+      "T3": true,
+      "phase1_gate": false,
+      "passes_all": false
+    },
+    "lgbm_v2": {
+      "all_season_mean": 0.5651554296629386,
+      "diff_vs_incumbent": 0.022617695140892822,
+      "block_diffs": {
+        "A": 0.011,
+        "B": -0.0146,
+        "C": 0.0661
+      },
+      "wins": 4,
+      "n": 20,
+      "jan_2023_vs_incumbent": -0.07053396615723806,
+      "phase1_replay_diff": 0.08547141318654683,
+      "phase1_bias_flag": false,
+      "T1": false,
+      "T2": false,
+      "T3": true,
+      "phase1_gate": true,
+      "passes_all": false
+    },
+    "adj_MA4": {
+      "all_season_mean": 0.6970819396838116,
+      "diff_vs_incumbent": 0.1545442051617656,
+      "block_diffs": {
+        "A": 0.1257,
+        "B": 0.1077,
+        "C": 0.2236
+      },
+      "wins": 2,
+      "n": 20,
+      "jan_2022_vs_MA12": 0.06801633400852758,
+      "jan_2023_vs_incumbent": 0.03301266146546933,
+      "phase1_replay_diff": 0.7292729893680511,
+      "phase1_bias_flag": true,
+      "T1": false,
+      "T2": false,
+      "T3": false,
+      "phase1_gate": false,
+      "passes_all": false
+    },
+    "blend_v2_adj": {
+      "all_season_mean": 0.5907927591007796,
+      "diff_vs_incumbent": 0.04825502457873358,
+      "block_diffs": {
+        "A": 0.0228,
+        "B": -0.0007,
+        "C": 0.1157
+      },
+      "wins": 4,
+      "n": 20,
+      "jan_2023_vs_incumbent": -0.05182167610992616,
+      "phase1_replay_diff": 0.3800607602106534,
+      "phase1_bias_flag": true,
+      "T1": false,
+      "T2": false,
+      "T3": true,
+      "phase1_gate": false,
+      "passes_all": false
+    }
+  }
+}
+exit=0

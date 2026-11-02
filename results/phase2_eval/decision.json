@@ -1,0 +1,136 @@
+{
+  "primary": "incumbent",
+  "passing": [],
+  "incumbent_all_season_mean": 0.542537734522046,
+  "thresholds": {
+    "T1": 0.01,
+    "T2": 0.6,
+    "T3": 0.03,
+    "phase1_tol": 0.1
+  },
+  "lightgbm_v2": {
+    "groups": [
+      "annual"
+    ],
+    "gate_weeks": null
+  },
+  "candidates": {
+    "MA12": {
+      "all_season_mean": 0.6028823893874247,
+      "diff_vs_incumbent": 0.06034465486537878,
+      "block_diffs": {
+        "A": 0.0363,
+        "B": 0.1164,
+        "C": 0.0363
+      },
+      "wins": 1,
+      "n": 20,
+      "jan_2022_vs_MA12": 0.0,
+      "jan_2023_vs_incumbent": 0.0711474241245007,
+      "phase1_replay_diff": 0.08930655486415218,
+      "phase1_bias_flag": true,
+      "T1": false,
+      "T2": false,
+      "T3": false,
+      "phase1_gate": true,
+      "passes_all": false
+    },
+    "MA4": {
+      "all_season_mean": 0.5782312031784334,
+      "diff_vs_incumbent": 0.0356934686563873,
+      "block_diffs": {
+        "A": 0.0156,
+        "B": 0.0764,
+        "C": 0.021
+      },
+      "wins": 4,
+      "n": 20,
+      "jan_2022_vs_MA12": 0.07861654616385916,
+      "jan_2023_vs_incumbent": 0.14163308625029547,
+      "phase1_replay_diff": 0.07072178644503457,
+      "phase1_bias_flag": false,
+      "T1": false,
+      "T2": false,
+      "T3": false,
+      "phase1_gate": true,
+      "passes_all": false
+    },
+    "lgbm_frozen": {
+      "all_season_mean": 0.5694279473521633,
+      "diff_vs_incumbent": 0.026890212830117326,
+      "block_diffs": {
+        "A": 0.024,
+        "B": -0.0153,
+        "C": 0.066
+      },
+      "wins": 4,
+      "n": 20,
+      "jan_2023_vs_incumbent": -0.07524273218982891,
+      "phase1_replay_diff": 0.16368991049387538,
+      "phase1_bias_flag": true,
+      "T1": false,
+      "T2": false,
+      "T3": true,
+      "phase1_gate": false,
+      "passes_all": false
+    },
+    "lgbm_v2": {
+      "all_season_mean": 0.5651554296629386,
+      "diff_vs_incumbent": 0.022617695140892822,
+      "block_diffs": {
+        "A": 0.011,
+        "B": -0.0146,
+        "C": 0.0661
+      },
+      "wins": 4,
+      "n": 20,
+      "jan_2023_vs_incumbent": -0.07053396615723806,
+      "phase1_replay_diff": 0.08547141318654683,
+      "phase1_bias_flag": false,
+      "T1": false,
+      "T2": false,
+      "T3": true,
+      "phase1_gate": true,
+      "passes_all": false
+    },
+    "adj_MA4": {
+      "all_season_mean": 0.6970819396838116,
+      "diff_vs_incumbent": 0.1545442051617656,
+      "block_diffs": {
+        "A": 0.1257,
+        "B": 0.1077,
+        "C": 0.2236
+      },
+      "wins": 2,
+      "n": 20,
+      "jan_2022_vs_MA12": 0.06801633400852758,
+      "jan_2023_vs_incumbent": 0.03301266146546933,
+      "phase1_replay_diff": 0.7292729893680511,
+      "phase1_bias_flag": true,
+      "T1": false,
+      "T2": false,
+      "T3": false,
+      "phase1_gate": false,
+      "passes_all": false
+    },
+    "blend_v2_adj": {
+      "all_season_mean": 0.5907927591007796,
+      "diff_vs_incumbent": 0.04825502457873358,
+      "block_diffs": {
+        "A": 0.0228,
+        "B": -0.0007,
+        "C": 0.1157
+      },
+      "wins": 4,
+      "n": 20,
+      "jan_2023_vs_incumbent": -0.05182167610992616,
+      "phase1_replay_diff": 0.3800607602106534,
+      "phase1_bias_flag": true,
+      "T1": false,
+      "T2": false,
+      "T3": true,
+      "phase1_gate": false,
+      "passes_all": false
+    }
+  }
+}
