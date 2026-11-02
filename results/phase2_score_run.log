@@ -1,0 +1,59 @@
+actuals: Phase 2 - Sales.csv  (15,053 series x 13 weeks)
+
+                    model  score mae_pct bias_pct total_actual total_predicted
+          Frozen LightGBM 0.6645  0.5926  -0.0719    3,242,739       3,475,885
+              LightGBM-v2 0.7080  0.6078  -0.1002    3,242,739       3,567,742
+Incumbent blend (primary) 0.7128  0.6042  -0.1085    3,242,739       3,594,645
+       Blend v2 + adj MA4 0.7434  0.6131  -0.1303    3,242,739       3,665,397
+                      MA4 0.7936  0.6485  -0.1451    3,242,739       3,713,404
+                     MA12 0.8046  0.6097  -0.1949    3,242,739       3,874,725
+         Jan-adjusted MA4 0.8258  0.6654  -0.1605    3,242,739       3,763,053
+
+By segment (Phase 0 zero-rate segments):
+                    model        slice  score mae_pct bias_pct demand_share
+              LightGBM-v2       active 0.5178  0.5069  -0.0109        0.435
+          Frozen LightGBM       active 0.5191  0.4961  +0.0230        0.435
+       Blend v2 + adj MA4       active 0.5572  0.5119  -0.0453        0.435
+Incumbent blend (primary)       active 0.6294  0.5559  -0.0734        0.435
+         Jan-adjusted MA4       active 0.6319  0.5522  -0.0797        0.435
+                      MA4       active 0.8178  0.6479  -0.1699        0.435
+                     MA12       active 0.8454  0.6134  -0.2320        0.435
+          Frozen LightGBM intermittent 0.6141  0.5552  -0.0589        0.533
+              LightGBM-v2 intermittent 0.6533  0.5717  -0.0816        0.533
+Incumbent blend (primary) intermittent 0.6820  0.5795  -0.1025        0.533
+                     MA12 intermittent 0.7694  0.5869  -0.1825        0.533
+                      MA4 intermittent 0.7798  0.6337  -0.1460        0.533
+       Blend v2 + adj MA4 intermittent 0.8000  0.6318  -0.1682        0.533
+         Jan-adjusted MA4 intermittent 1.0010  0.7462  -0.2548        0.533
+                     MA12       sparse 1.0300  0.9323  +0.0977        0.033
+                      MA4       sparse 1.0969  0.8976  +0.1993        0.033
+         Jan-adjusted MA4       sparse 1.1577  0.8538  +0.3040        0.033
+       Blend v2 + adj MA4       sparse 2.3018  1.6555  -0.6464        0.033
+Incumbent blend (primary)       sparse 2.3285  1.6525  -0.6759        0.033
+          Frozen LightGBM       sparse 4.0432  2.4921  -1.5511        0.033
+              LightGBM-v2       sparse 4.1394  2.5427  -1.5967        0.033
+
+Volume on the 5,340 series with zero actual demand:
+Incumbent blend (primary)    111200.0
+LightGBM-v2                  227751.0
+Frozen LightGBM              211018.0
+MA4                           11382.0
+MA12                          30203.0
+Jan-adjusted MA4               7711.0
+Blend v2 + adj MA4           117731.0
+
+Weekly totals:
+            actual  Incumbent blend (primary)  LightGBM-v2  Frozen LightGBM     MA4    MA12  Jan-adjusted MA4  Blend v2 + adj MA4
+2024-01-08  256499                     277422       277090           269198  285646  298056            289466              283278
+2024-01-15  240900                     277249       276294           268851  285646  298056            289466              282880
+2024-01-22  243019                     277147       276844           268647  285646  298056            289466              283155
+2024-01-29  248486                     278385       278028           271124  285646  298056            289466              283747
+2024-02-05  236531                     278062       279186           270477  285646  298056            289466              284326
+2024-02-12  261467                     276051       272684           266456  285646  298056            289466              281075
+2024-02-19  234517                     275765       271922           265883  285646  298056            289466              280694
+2024-02-26  246484                     275746       272769           265846  285646  298056            289466              281117
+2024-03-04  256865                     275900       273604           266153  285646  298056            289466              281535
+2024-03-11  227597                     275639       270761           265631  285646  298056            289466              280113
+2024-03-18  250503                     275610       271947           265573  285646  298056            289466              280706
+2024-03-25  268816                     275647       273746           265648  285646  298056            289466              281606
+2024-04-01  271055                     276022       272867           266397  285646  298056            289466              281166

@@ -1,0 +1,27 @@
+{
+  "scored_at_utc": "2026-11-02T04:22:04+00:00",
+  "scored_at_commit": "10ee07b33a7c016c7e0c2a81d28750e035b19cca",
+  "freeze_tag": "phase2-freeze-v1",
+  "predictions_commit": "dfb09a53e7052c54477d07c3ac8b1247d06220aa",
+  "actuals_file": "Phase 2 - Sales.csv",
+  "actuals_sha256": "ef5b998226495fdfc44ea4dcda8df9b45b1c76f6adb50441e2217ad3a623c6ac",
+  "frozen_sha256": {
+    "phase2_forecast.csv": "7c69427d7327a6db64d581881bf6bde26fe9e2a0b2e61cc8a16cc068c7a75e21",
+    "phase2_secondary_lgbm_v2.csv": "9e6b7d8c655b7141339f27bee020673e75c61246eb796a0f8fb40f893920d004",
+    "phase2_secondary_lgbm_frozen.csv": "b5dd080624633d7dbf2f1a4792c0ded72245d9ef94f4ce2707defb25977895df",
+    "phase2_secondary_MA4.csv": "ec51eb0d883465a60481322c28aa225821dbbf463d6dd85216e5f49014b0da8b",
+    "phase2_secondary_MA12.csv": "29b354efe594f88b59052493c9ac56540bb2b2977e329c1dc09b203847c9f165",
+    "phase2_secondary_adj_MA4.csv": "88d65653a62de9eb24274422258744a6bdb343399558f0d634ea80aa98c40259",
+    "phase2_secondary_blend_v2_adj.csv": "6994c66af9741c48313b130d42dc99f1604a4332ba652814e3e0238bb6ebb6da"
+  },
+  "series_with_zero_actual": 5340,
+  "volume_on_zero_actual_series": {
+    "Incumbent blend (primary)": 111199.61067792369,
+    "LightGBM-v2": 227751.49501015275,
+    "Frozen LightGBM": 211017.72135584737,
+    "MA4": 11381.5,
+    "MA12": 30203.333333333336,
+    "Jan-adjusted MA4": 7711.147215799988,
+    "Blend v2 + adj MA4": 117731.32111297638
+  }
+}
