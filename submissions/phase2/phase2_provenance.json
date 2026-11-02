@@ -1,0 +1,161 @@
+{
+  "generated_at_utc": "2026-11-02T03:50:15+00:00",
+  "code_commit": "32a3a88761962762fe69668a35215f1c2d943c10",
+  "training_cutoff": "2024-01-01",
+  "forecast_dates": [
+    "2024-01-08",
+    "2024-01-15",
+    "2024-01-22",
+    "2024-01-29",
+    "2024-02-05",
+    "2024-02-12",
+    "2024-02-19",
+    "2024-02-26",
+    "2024-03-04",
+    "2024-03-11",
+    "2024-03-18",
+    "2024-03-25",
+    "2024-04-01"
+  ],
+  "primary": "incumbent -> phase2_forecast.csv (DECISIONS.md D014, results/phase2_eval/decision.json)",
+  "secondaries": {
+    "phase2_secondary_MA12.csv": "MA12",
+    "phase2_secondary_MA4.csv": "MA4",
+    "phase2_secondary_lgbm_frozen.csv": "lgbm_frozen",
+    "phase2_secondary_lgbm_v2.csv": "lgbm_v2",
+    "phase2_secondary_adj_MA4.csv": "adj_MA4",
+    "phase2_secondary_blend_v2_adj.csv": "blend_v2_adj"
+  },
+  "lightgbm_v2_spec": {
+    "groups": [
+      "annual"
+    ],
+    "gate_weeks": null
+  },
+  "frozen_info": {
+    "fit_origins": [
+      52,
+      56,
+      60,
+      64,
+      68,
+      72,
+      76,
+      80,
+      84,
+      88,
+      92,
+      96,
+      100,
+      104,
+      108,
+      112,
+      116,
+      120,
+      124,
+      128,
+      132,
+      136,
+      140,
+      144
+    ],
+    "val_origins": [
+      160,
+      164,
+      168
+    ],
+    "best_iteration": 41
+  },
+  "v2_info": {
+    "fit_origins": [
+      52,
+      56,
+      60,
+      64,
+      68,
+      72,
+      76,
+      80,
+      84,
+      88,
+      92,
+      96,
+      100,
+      104,
+      108,
+      112,
+      116,
+      120,
+      124,
+      128,
+      132,
+      136,
+      140,
+      144
+    ],
+    "val_origins": [
+      160,
+      164,
+      168
+    ],
+    "best_iteration": 40,
+    "feature_cols": [
+      "horizon",
+      "lag_1",
+      "lag_2",
+      "lag_3",
+      "lag_4",
+      "lag_8",
+      "lag_12",
+      "lag_26",
+      "lag_52",
+      "roll_mean_4",
+      "roll_mean_8",
+      "roll_mean_12",
+      "roll_mean_26",
+      "roll_std_12",
+      "zero_rate_12",
+      "price_at_origin",
+      "price_was_missing_at_origin",
+      "segment",
+      "target_month",
+      "target_week_sin",
+      "target_week_cos",
+      "target_quarter",
+      "ly_same_week",
+      "ly_week_after",
+      "ly_week_before",
+      "ly_3wk_mean",
+      "ly2_same_week"
+    ]
+  },
+  "jan_multiplier": {
+    "n_years": 3,
+    "mean": 0.8795174070462498,
+    "median": 0.8693388696243242
+  },
+  "ma4_level_total": 285646.5,
+  "forecast_weekly_mean_totals": {
+    "MA12": 298055.75,
+    "MA4": 285646.5,
+    "lgbm_frozen": 267375.79709827877,
+    "incumbent": 276511.1485491394,
+    "lgbm_v2": 274441.70487020793,
+    "adj_MA4": 289465.5881300106,
+    "blend_v2_adj": 281953.6465001093
+  },
+  "lightgbm_version": "4.7.0",
+  "pandas_version": "2.3.3",
+  "input_sha256": {
+    "vn1_long_p0p1.parquet": "9d17c93f5cc3cb231e989c81c0d9c639706e206f9cec5547a8dc1de4951d5f89"
+  },
+  "output_sha256": {
+    "phase2_forecast.csv": "7c69427d7327a6db64d581881bf6bde26fe9e2a0b2e61cc8a16cc068c7a75e21",
+    "phase2_secondary_MA12.csv": "29b354efe594f88b59052493c9ac56540bb2b2977e329c1dc09b203847c9f165",
+    "phase2_secondary_MA4.csv": "ec51eb0d883465a60481322c28aa225821dbbf463d6dd85216e5f49014b0da8b",
+    "phase2_secondary_lgbm_frozen.csv": "b5dd080624633d7dbf2f1a4792c0ded72245d9ef94f4ce2707defb25977895df",
+    "phase2_secondary_lgbm_v2.csv": "9e6b7d8c655b7141339f27bee020673e75c61246eb796a0f8fb40f893920d004",
+    "phase2_secondary_adj_MA4.csv": "88d65653a62de9eb24274422258744a6bdb343399558f0d634ea80aa98c40259",
+    "phase2_secondary_blend_v2_adj.csv": "6994c66af9741c48313b130d42dc99f1604a4332ba652814e3e0238bb6ebb6da"
+  }
+}

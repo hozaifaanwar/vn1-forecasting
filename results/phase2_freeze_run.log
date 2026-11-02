@@ -1,0 +1,18 @@
+{
+  "primary": "incumbent -> phase2_forecast.csv (DECISIONS.md D014, results/phase2_eval/decision.json)",
+  "forecast_weekly_mean_totals": {
+    "MA12": 298055.75,
+    "MA4": 285646.5,
+    "lgbm_frozen": 267375.79709827877,
+    "incumbent": 276511.1485491394,
+    "lgbm_v2": 274441.70487020793,
+    "adj_MA4": 289465.5881300106,
+    "blend_v2_adj": 281953.6465001093
+  },
+  "ma4_level_total": 285646.5,
+  "jan_multiplier": {
+    "n_years": 3,
+    "mean": 0.8795174070462498,
+    "median": 0.8693388696243242
+  }
+}
