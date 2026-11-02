@@ -1,0 +1,11 @@
+real-data leakage check passed
+base mean 0.5896
+annual         mean 0.5775 vs 0.5896  improvement +0.0121  wins 8/10  -> KEEP
+activity       mean 0.5781 vs 0.5775  improvement -0.0007  wins 2/10  -> drop
+aggregates     mean 0.5981 vs 0.5775  improvement -0.0206  wins 5/10  -> drop
+trend          mean 0.5871 vs 0.5775  improvement -0.0097  wins 5/10  -> drop
+identity       mean 0.6320 vs 0.5775  improvement -0.0546  wins 0/10  -> drop
+dormancy_gate  mean 0.5718 vs 0.5775  improvement +0.0057  wins 4/10  -> drop
+
+LightGBM-v2: {"groups": ["annual"], "gate_weeks": null}
+exit=0

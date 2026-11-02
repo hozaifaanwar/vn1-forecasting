@@ -1,0 +1,102 @@
+{
+  "groups": [
+    "annual"
+  ],
+  "gate_weeks": null,
+  "ablation_origins": [
+    92,
+    96,
+    100,
+    104,
+    108,
+    112,
+    116,
+    120,
+    124,
+    128
+  ],
+  "rule": {
+    "min_improvement": 0.005,
+    "min_wins": 6
+  },
+  "steps": [
+    {
+      "step": 1,
+      "group": "annual",
+      "against": [
+        "frozen features"
+      ],
+      "mean_before": 0.5895544626882692,
+      "mean_after": 0.577455864477619,
+      "improvement": 0.012098598210650352,
+      "wins": 8,
+      "n": 10,
+      "kept": true
+    },
+    {
+      "step": 2,
+      "group": "activity",
+      "against": [
+        "annual"
+      ],
+      "mean_before": 0.577455864477619,
+      "mean_after": 0.578138985906167,
+      "improvement": -0.000683121428548189,
+      "wins": 2,
+      "n": 10,
+      "kept": false
+    },
+    {
+      "step": 3,
+      "group": "aggregates",
+      "against": [
+        "annual"
+      ],
+      "mean_before": 0.577455864477619,
+      "mean_after": 0.5981042853867666,
+      "improvement": -0.02064842090914782,
+      "wins": 5,
+      "n": 10,
+      "kept": false
+    },
+    {
+      "step": 4,
+      "group": "trend",
+      "against": [
+        "annual"
+      ],
+      "mean_before": 0.577455864477619,
+      "mean_after": 0.5871441398243219,
+      "improvement": -0.009688275346703117,
+      "wins": 5,
+      "n": 10,
+      "kept": false
+    },
+    {
+      "step": 5,
+      "group": "identity",
+      "against": [
+        "annual"
+      ],
+      "mean_before": 0.577455864477619,
+      "mean_after": 0.6320443366179879,
+      "improvement": -0.05458847214036899,
+      "wins": 0,
+      "n": 10,
+      "kept": false
+    },
+    {
+      "step": 6,
+      "group": "dormancy_gate",
+      "against": [
+        "annual"
+      ],
+      "mean_before": 0.577455864477619,
+      "mean_after": 0.5717715749097787,
+      "improvement": 0.005684289567840206,
+      "wins": 4,
+      "n": 10,
+      "kept": false
+    }
+  ]
+}
