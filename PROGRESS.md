@@ -387,6 +387,22 @@ Forecasting with Python*.
   - Lessons recorded in `notes/forecasting_playbook.md` §H–I (27–38).
   - Still open: the learner's own "What I see / What it means" cells and
     answers to the five "Questions for D014" in the findings note.
+- **Session 8 (cont.) — D014 written, Phase 2 frozen** (tag `phase2-freeze-v1`, 8c622ee):
+  - Benchmark-only calibration; the learner caught early stopping on scored
+    origins and target overlap with the reserved block. Fixed: one frozen-
+    procedure model per origin; ablation 92–128, purge 132–140, reserved
+    144–168. Incumbent all-season 0.5425 (was 0.5354 under the leaky design).
+  - D014 committed (909561c) before any challenger: T1 0.010 + 2/3 blocks,
+    T2 60%, T3 0.03, Phase 1 gate +0.10.
+  - Built `src/features_v2.py`, `src/pipeline_v2.py` (+ 6 tests, 65 pass).
+    Ablation kept only the annual group (target-aligned lags).
+  - Evaluation (rule in code, committed before running): **no challenger
+    passed; the incumbent stays primary** (D015). LightGBM-v2 0.5652, frozen
+    LightGBM 0.5694, MA4 0.5782, MA12 0.6029, Jan-adjusted MA4 0.6971.
+  - Diagnostics: Jan-adjusted MA4's averaged per-series ratios bias it
+    upward; the primary implies 0.968 × MA4 level vs. past Jan–Apr 0.84–0.90,
+    so an over-forecast of ~8–15% is the most likely failure mode.
+  - Lessons 39–42 in the playbook.
 
 ---
 
@@ -446,6 +462,8 @@ freeze-before-reveal with provenance (commit hash, hashes, timestamp).
 ---
 
 ## Current benchmark
+**Phase 2 (frozen, not yet scored):** primary = incumbent (0.5 LightGBM + 0.5
+MA4), all-season CV 0.5425; six secondaries frozen with it (D015).
 **Phase 1, real actuals (the first clean test):** blend 0.5704, MA4 0.6411,
 MA12 (official) 0.6597, LightGBM 0.7341. Earlier Phase 0 evidence, for
 context: development holdout blend 0.4839 / MA4 0.4987 / LightGBM 0.4996;
@@ -455,7 +473,7 @@ all-season rolling CV blend 0.5387 / LightGBM 0.5482 / MA4 0.5834.
 
 ## Next VN1 work
 
-### Immediate — finish Session 8, then D014
+### Immediate — score Phase 2 (D014/D015 done; items below kept for history)
 1. [DONE] Learner's Phase 1 interpretation (`notes/phase1_predictions.md`).
 2. [DONE] Phase 0 + Phase 1 dataset (`data/processed/vn1_long_p0p1.parquet`).
 3. [DONE] Demand questions Q1–Q6, verified (`notes/session8_findings.md`).
@@ -518,10 +536,11 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-The learner fills in "What I see / What it means" for Q1–Q6 in
-`notebooks/08_session8_demand.ipynb` and answers the five "Questions for
-D014" in `notes/session8_findings.md`; then write D014 (Phase 2
-shortlist, decision rule, thresholds) before running any Phase 2 candidate.
+Download the real Phase 2 actuals (only now, after `phase2-freeze-v1`), and
+write a `scripts/score_phase2.py` that scores all seven frozen files with the
+D013 reporting (error/bias parts, segments, weekly shape, zero-series volume).
+The learner first writes a prediction of the ranking in `notes/`, and fills
+the Session 8 notebook's "What I see / What it means" cells.
 
 ## Session-end rule
 End every session by updating this file: what got done, the latest score,

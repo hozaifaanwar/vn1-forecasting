@@ -189,3 +189,21 @@ DFBP = Vandeput, *Demand Forecasting Best Practices* (2023).
 **38. Save, then verify from the saved file.**
 - *Mistake:* several times the notebook on disk didn't contain code that had been run in the editor.
 - *Apply:* save before asking for a review, and review outputs from the saved file. Re-run a notebook top to bottom before committing it, so its outputs come from one in-order run.
+
+## J. Phase 2 selection (Session 8, D014–D015)
+
+**39. Every scored target must be invisible to the model that is scored, including through early stopping.**
+- *Mistake:* the first calibration early-stopped LightGBM on the very origins it was scored on. The learner caught it. Fixing it (one frozen-procedure model per origin) moved the incumbent from 0.5354 to 0.5425.
+- *Apply:* evaluate with exactly the procedure that will make the real forecast. Purge the ablation's targets away from the reserved block.
+
+**40. An average ratio of ratios is biased upward.**
+- *Mistake:* the January-adjusted MA4 averaged per-series ratios. Series that were tiny at the prior origin produced huge ratios, so the mixed multiplier was 1.01 when the portfolio ratio was 0.87, and 1.58 in Q4 against an actual 1.11.
+- *Apply:* aggregate as total ÷ total (level-weighted), or shrink and cap per-series ratios. Check the level-weighted multiplier against the portfolio ratio before trusting it.
+
+**41. A gain in the mean is not a gain if it loses most origins.**
+- *Finding:* the dormancy gate improved the mean by 0.006 but won only 4 of 10 origins. LightGBM alone won Jan 2023 by 0.07 but lost 16 of 20 origins overall.
+- *Apply:* require both size and consistency, and decide that before seeing results.
+
+**42. Fix the specific defect before adding new ideas.**
+- *Finding:* of six feature groups, only the target-aligned annual lag (the fix for the Phase 1 failure) helped. The other four groups and the gate did not pass, and IDs badly overfit (0/10).
+- *Apply:* first repair what the post-mortem found, then test new features one at a time.

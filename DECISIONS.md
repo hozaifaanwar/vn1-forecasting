@@ -216,3 +216,30 @@ Origin 88 is dropped because the frozen procedure has no training origin there. 
 - Spikes stay diagnostic only (question 5, delegated by the learner to Claude: under 1% of volume, weak in-window signal).
 
 **Revisit if:** never for the "no change after challenger scores exist" clause (D013 rule 1). The thresholds may be recalibrated for VN2 or later phases, from benchmarks only and before any challenger runs.
+
+## D015 — Phase 2 frozen: the incumbent stays primary (D014 applied mechanically)
+
+**Result of the D014 rule** (`scripts/phase2_evaluate.py`, committed in a09a55a before it ran; outputs in `results/phase2_eval/`, decision in `decision.json`): **no candidate passed all four conditions, so the incumbent (0.5 frozen LightGBM + 0.5 MA4, retrained on Phase 0 + 1) is the Phase 2 primary.** Frozen at tag `phase2-freeze-v1` (commit 8c622ee): `submissions/phase2/phase2_forecast.csv` (origin 2024-01-01, weeks 2024-01-08 → 2024-04-01), with the other six candidates as declared secondaries and a provenance file. Verified independently: the primary equals a fresh `frozen_forecast(df, 182)` blend, the row order matches the Phase 1 file, and the sha256 hashes match. The learner was asleep (autonomous run on the learner's instruction), so no learner predictions were recorded before the challengers ran.
+
+| Candidate | All-season (vs. incumbent 0.5425) | Wins / 20 | Jan 2023 (vs. 0.6430) | Phase 1 replay (vs. 0.5704) | Fails |
+|---|---|---|---|---|---|
+| LightGBM-v2 (frozen + annual) | 0.5652 | 4 | 0.5725 | 0.6559 | T1, T2 |
+| Frozen LightGBM | 0.5694 | 4 | 0.5677 | 0.7341 | T1, T2, gate |
+| MA4 | 0.5782 | 4 | 0.7846 | 0.6411 | T1, T2, T3 |
+| Blend v2 + adj. MA4 | 0.5908 | 4 | 0.5912 | 0.9505 | T1, T2, gate |
+| MA12 | 0.6029 | 1 | 0.7141 | 0.6597 | T1, T2, T3 |
+| January-adjusted MA4 | 0.6971 | 2 | 0.6760 | 1.2997 | all four |
+
+**Ablation** (origins 92–128, `results/phase2_ablation/`): only the annual group was kept (0.5896 → 0.5775, 8/10 wins). Activity −0.001 (2/10), aggregates −0.021, trend −0.010, identity −0.055 (0/10). Dormancy gate +0.006 but 4/10 wins, dropped.
+
+**Diagnostics (recorded after the decision; none changes it, per D013 rule 1):**
+
+- **The D012 pattern again.** LightGBM alone beats the incumbent clearly in Jan 2023 (0.568–0.573 vs. 0.643) and in block B, but loses in blocks A and C (C by 0.066) and on 16 of 20 origins. D013 rule 2 forbids letting one season decide; the rule was followed.
+- **The annual fix is real.** LightGBM-v2 improves on frozen LightGBM in every comparison except Jan 2023 (tiny), most in the Phase 1 replay (0.734 → 0.656), which is the Q4 timing failure D013 traced to `lag_52`. It is still not better than the blend.
+- **January-adjusted MA4 has a design flaw.** Averaging raw per-series ratios biases the multiplier upward (series that were small at the prior origin get very large ratios). At the Phase 2 origin the portfolio ratios are 0.87, 0.84, 0.90, but the level-weighted mixed multiplier is 1.01. In the Phase 1 replay it is 1.58 against an actual 1.11 (forecast 42% too high). It was also applied at every origin, where it lost badly (0.697). It helped where intended (Jan 2023: 0.676 vs. MA4 0.785), but not enough. Session 8's positive test used the ≥20 units/week line, not ≥5, as the learner warned.
+- **Implied Phase 2 total.** The incumbent forecasts 276,511 units/week, 0.968 of the MA4 level (285,646). In 2021–2023, Jan–Apr came in at 0.84–0.90 of that level. If that repeats, the primary over-forecasts by roughly 8–15%. Recorded in advance as the most likely failure mode.
+- The incumbent's LightGBM stopped at 41 trees (Phase 1: 223).
+
+**Ideas for after scoring (not tested, not used):** a 0.5 LightGBM-v2 + 0.5 MA4 blend (the incumbent's structure with the fixed feature); a January ratio built from total-over-total (level-weighted) rather than averaged per-series ratios.
+
+**Revisit if:** Phase 2 actuals are scored (all seven files), with the same reporting as D013.
