@@ -243,3 +243,22 @@ Origin 88 is dropped because the frozen procedure has no training origin there. 
 **Ideas for after scoring (not tested, not used):** a 0.5 LightGBM-v2 + 0.5 MA4 blend (the incumbent's structure with the fixed feature); a January ratio built from total-over-total (level-weighted) rather than averaged per-series ratios.
 
 **Revisit if:** Phase 2 actuals are scored (all seven files), with the same reporting as D013.
+
+## D016 — Phase 2 outcome; VN1 is now contaminated; a "fresh" post-competition track with a pre-registered rule
+
+**Date:** 2026-11-04.
+
+**Phase 2 outcome** (`results/phase2_scores.csv`, confirmed with the official `vn1_score.py`): incumbent (primary) 0.7128 (bias +10.85%), LightGBM-v2 0.7080, frozen LightGBM 0.6645 (+7.2%), MA4 0.7936, MA12 0.8046 (matches the official 80.46%). Winner 0.4637; naive (last week) 0.5070. Every model over-forecast; the D015 warning (8–15%) came true. Our selection rule had no naive candidate and no January-specific evidence path.
+
+**Post-hoc diagnostics (after seeing the leaderboard; not evidence for anything):**
+- Naive under D014 would have failed T1, T2 and the Phase 1 gate (all-season 0.599 vs 0.5425, 5/20 wins). Adding naive alone would not have changed the pick.
+- Gap of frozen LightGBM to 1st (≈0.20): bias ≈0.06, forecast on the 5,340 zero-demand series ≈0.06, accuracy on selling series ≈0.09. Top 5 bias all within ±3%.
+
+**Contamination.** The project has now seen Phase 2 actuals, the leaderboard, the top 5 forecast files, the winners' webinar and Vandeput's article. No VN1 result from here on is a fair competition result. Anything new on VN1 is a *post-competition replay*, reported as such.
+
+**Fresh track (`vn1_fresh/`).** A standalone pipeline built from the winners' published methods (AMSI, seasonal Theta, Tweedie LightGBM, fold-fitted ensemble weights, dormancy zeroing). Pre-registered before its Phase 2 file is scored:
+1. All choices (LightGBM rounds, ensemble weights, dormancy N) are made inside the script on four 13-week backtest folds from the training history; the season-matched fold counts double. The script never reads the sales of the phase it forecasts.
+2. Phase 1 replay may be run and scored first (competitors saw Phase 1 scores too). Code may change after that.
+3. Then the code is committed and tagged, the Phase 2 forecast is produced once, and scored once with the official scorer. No change after that score; the number is reported whatever it is, labelled "post-competition replay".
+
+**Revisit if:** a new dataset (VN2 or another) allows a clean, uncontaminated test.

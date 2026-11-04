@@ -1,0 +1,20 @@
+[     0s] phase 1: 15053 series, 170 weeks, last week 2023-10-02, folds [156, 143, 130, 117]
+[     1s] training table 4,220,866 rows x 35 features
+[   148s] origin 156: components done (3,369,535 training rows)
+[   271s] origin 143: components done (2,751,307 training rows)
+[   375s] origin 130: components done (2,186,015 training rows)
+[   456s] origin 117: components done (1,552,200 training rows)
+[   634s] origin 169: components done (4,220,866 training rows)
+[   634s] LightGBM rounds: 300  {"150": 0.5833, "300": 0.5533, "500": 0.5615, "800": 0.5711, "1200": 0.5821}
+[   702s] ensemble weights {"lgbm": 0.809, "amsi4": 0.017, "amsi13": 0.0, "theta": 0.113, "ma13": 0.0, "naive": 0.08}
+[   702s] dormancy N = 13  {"None": 0.5344, "8": 0.5347, "13": 0.534, "26": 0.5345, "52": 0.5343}
+[   703s] fold scores (lower is better):
+             156     143     130     117  weighted
+lgbm      0.4751  0.4596  0.5369  0.6475    0.5533
+amsi4     0.6959  0.5614  0.5472  0.6663    0.6274
+amsi13    0.6814  0.5790  0.5258  0.6567    0.6199
+theta     0.4942  0.4671  0.6879  0.7903    0.6460
+ma13      0.5225  0.5024  0.7006  0.8489    0.6846
+naive     0.5247  0.5056  0.6955  0.8518    0.6859
+ENSEMBLE  0.4569  0.4394  0.4787  0.6475    0.5340
+[   703s] wrote vn1_fresh\out\phase1_forecast.csv
