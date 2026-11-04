@@ -1,0 +1,10 @@
+Phase 2 score: 45.82%   (MAE% 45.74%, Bias% -0.08%)
+
+   45.82%     <- your forecast
+   46.37%  1st: Jakub Figura and Philip Stubbs
+   46.57%  2nd: Justin Furlotte
+   47.58%  3rd: Arsa Nikzad
+   47.74%  4th: Antoine Schwartz
+   48.08%  5th: An Hoang
+   50.70%  Naive forecast
+   80.46%  12-week moving average

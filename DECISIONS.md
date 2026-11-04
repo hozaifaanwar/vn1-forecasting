@@ -262,3 +262,23 @@ Origin 88 is dropped because the frozen procedure has no training origin there. 
 3. Then the code is committed and tagged, the Phase 2 forecast is produced once, and scored once with the official scorer. No change after that score; the number is reported whatever it is, labelled "post-competition replay".
 
 **Revisit if:** a new dataset (VN2 or another) allows a clean, uncontaminated test.
+
+## D017 — vn1_fresh scored once on Phase 2: 0.4582 (post-competition replay)
+
+**Date:** 2026-11-04. Code tag `fresh-v1-freeze` (cbcac3b); forecast committed before scoring (01eb3c7, sha256 8dcb5fd6…); scored once with the official `vn1_score.py`.
+
+| | Phase 2 score | Bias |
+|---|---|---|
+| **vn1_fresh ensemble** | **0.4582** | −0.08% |
+| its LightGBM alone (3 seeds) | 0.4684 | −0.23% |
+| naive / Theta / AMSI-4 | 0.5070 / 0.5457 / 0.5490 | |
+| 1st place (competition) | 0.4637 | |
+| our D015 primary | 0.7128 | +10.85% |
+
+Chosen on folds (inside the script): LightGBM 300 rounds; weights LightGBM 0.685, naive 0.24, Theta 0.045, MA13 0.03, AMSI 0; dormancy N = 8 weeks. Phase 1 replay with the same code: 0.6189 (worse than our old Phase 1 blend 0.5704).
+
+**What it is not.** Not a competition win. It was built after seeing the Phase 2 actuals, the leaderboard, the winners' files and their methods. The fold design, the one-pass scoring and the committed forecast limit how much that knowledge could leak in, but cannot remove it. One run, one dataset: the 0.0055 margin over 1st is inside normal run-to-run noise.
+
+**What changed vs. D015's LightGBM (0.6645):** series start at their first sale; Tweedie loss on many more origin rows (step 3 from week 60); target-aligned last-year features and the AMSI index as features; weeks-since-last-sale and zero shares; three seeds averaged; ensemble weights fitted to the VN1 metric, including the bias term (the search had to move weight between components to keep the total level fixed); dormancy zeroing. Not yet separated one by one.
+
+**Revisit if:** an ablation splits the gain, or a clean dataset is available.

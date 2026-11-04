@@ -462,12 +462,12 @@ freeze-before-reveal with provenance (commit hash, hashes, timestamp).
 ---
 
 ## Current benchmark
-**Phase 2 (frozen, not yet scored):** primary = incumbent (0.5 LightGBM + 0.5
-MA4), all-season CV 0.5425; six secondaries frozen with it (D015).
-**Phase 1, real actuals (the first clean test):** blend 0.5704, MA4 0.6411,
-MA12 (official) 0.6597, LightGBM 0.7341. Earlier Phase 0 evidence, for
-context: development holdout blend 0.4839 / MA4 0.4987 / LightGBM 0.4996;
-all-season rolling CV blend 0.5387 / LightGBM 0.5482 / MA4 0.5834.
+**Post-competition replay (D016/D017, contaminated: built after seeing Phase 2 results):**
+`vn1_fresh` ensemble 0.4582 on Phase 2 (official scorer; 1st place 0.4637, naive 0.5070);
+Phase 1 replay 0.6189. Its LightGBM alone 0.4684.
+**Phase 2, frozen competition-style (D015), scored:** incumbent (primary) 0.7128, LightGBM-v2
+0.7080, frozen LightGBM 0.6645, MA4 0.7936, MA12 0.8046.
+**Phase 1, real actuals:** blend 0.5704, MA4 0.6411, MA12 (official) 0.6597, LightGBM 0.7341.
 
 ---
 
@@ -536,11 +536,11 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-Download the real Phase 2 actuals (only now, after `phase2-freeze-v1`), and
-write a `scripts/score_phase2.py` that scores all seven frozen files with the
-D013 reporting (error/bias parts, segments, weekly shape, zero-series volume).
-The learner first writes a prediction of the ranking in `notes/`, and fills
-the Session 8 notebook's "What I see / What it means" cells.
+Learner: read DECISIONS.md D016–D017 and `vn1_fresh/README.md`, then write in
+`notes/` (a) which three changes moved us from 0.66 to 0.46 and (b) why 0.4582 is
+not a competition win. Then fill the Session 8 notebook cells and save it.
+Any further VN1 tuning is off-limits for claims (contaminated); the next clean
+test needs a new dataset (VN2).
 
 ## Session-end rule
 End every session by updating this file: what got done, the latest score,
