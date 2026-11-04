@@ -282,3 +282,22 @@ Chosen on folds (inside the script): LightGBM 300 rounds; weights LightGBM 0.685
 **What changed vs. D015's LightGBM (0.6645):** series start at their first sale; Tweedie loss on many more origin rows (step 3 from week 60); target-aligned last-year features and the AMSI index as features; weeks-since-last-sale and zero shares; three seeds averaged; ensemble weights fitted to the VN1 metric, including the bias term (the search had to move weight between components to keep the total level fixed); dormancy zeroing. Not yet separated one by one.
 
 **Revisit if:** an ablation splits the gain, or a clean dataset is available.
+
+## D018 — Post-hoc ablation of vn1_fresh (diagnostic, scored on Phase 2; selects nothing)
+
+**Date:** 2026-11-04. `vn1_fresh/ablation.py`, results `vn1_fresh/out/ablation_phase2.csv`. Leave-one-out from LightGBM (1 seed, 300 rounds, 0.4674 on Phase 2; 0.5367 on the Jan 2023 fold).
+
+| Removed | Phase 2 Δ | Jan 2023 fold Δ |
+|---|---|---|
+| Tweedie (L2 instead) | **+0.103** | −0.015 |
+| client id | +0.026 | +0.008 |
+| zero/recency features | +0.025 | −0.001 |
+| leading-zero trimming | +0.016 | −0.036 |
+| last-year features | +0.010 | −0.022 |
+| AMSI index features | +0.009 | +0.017 |
+| half the training origins | +0.009 | +0.001 |
+| rolling stats | +0.009 | +0.011 |
+
+Post-processing on Phase 2: 3 seeds +0.001 (noise); ensemble weights −0.0002 alone; dormancy alone on LightGBM +0.002; **ensemble + dormancy together −0.009** (the naive weight lifts the level by +0.5% and dormancy removes volume from dead series; they offset).
+
+**Readings.** Tweedie is the one dominant ingredient. The Jan 2023 fold disagrees in sign with Phase 2 on four of eight items (Tweedie, trimming, last-year, zero/recency), so one season-matched fold is not enough to rank ingredients; the deltas do not add up (overlap between features). Deltas below ~0.005 are inside seed noise.
