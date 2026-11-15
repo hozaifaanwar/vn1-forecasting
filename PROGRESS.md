@@ -449,6 +449,16 @@ sensitivity check; first-sale (launch) detection and pre-launch zeros;
 dormancy and reactivation rates; gross vs. net sums; debugging a native
 crash to its root cause.
 
+### Covered (learn/ course, 2026-11-05 → 11-15)
+Self-coded notebooks in `learn/`. Lesson 0 (`00_metric.ipynb`): VN1 score =
+MAE part + bias part, written by the learner. Lesson 1 (`01_eda.ipynb`): wide
+load with `set_index` + `to_datetime`, Phase 0 (170 weeks) + Phase 1 (13) =
+183 columns; total weekly sales plot; Dec-last-4 → Jan–Mar ratio 0.817 / 0.781
+/ 0.851 (2020–2022), computed total ÷ total; pandas label alignment (why
+`jm / dec` gave NaN). Step 3 (first sale, dead series) in progress. Linked to
+D015: its January multiplier averaged per-series ratios (1.01) instead of
+total ÷ total (~0.87). Concepts explained: ablation, AMSI, Tweedie.
+
 ### Covered (Session 6)
 Forecast combination (equal-weight averaging, and why fixed weights are
 preferred to weights fitted on the same validation origins); pre-
@@ -536,11 +546,13 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-Learner: read DECISIONS.md D016–D017 and `vn1_fresh/README.md`, then write in
-`notes/` (a) which three changes moved us from 0.66 to 0.46 and (b) why 0.4582 is
-not a competition win. Then fill the Session 8 notebook cells and save it.
-Any further VN1 tuning is off-limits for claims (contaminated); the next clean
-test needs a new dataset (VN2).
+Learner: run Lesson 1 Step 3 in `learn/01_eda.ipynb` (3a first-sale counts,
+3b dead in last 8 weeks, vectorized; predict first: launched-later share and
+dead share), save, ask for review. Then Lesson 2 (benchmark ladder). The plan
+after that (Lessons 3 and 12, skills, VN2 blind attempt with sealed winners'
+files, MVP) is in CLAUDE.md "Current plan". Still open from before: notes on
+D016–D017 (three changes 0.66 → 0.46; why 0.4582 is not a competition win).
+Further VN1 tuning is off-limits for claims (contaminated).
 
 ## Session-end rule
 End every session by updating this file: what got done, the latest score,
