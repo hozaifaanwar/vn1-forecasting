@@ -546,9 +546,10 @@ Part of the roadmap; introduce when conceptually relevant.
 ---
 
 ## Single next action
-Learner: run Lesson 1 Step 3 in `learn/01_eda.ipynb` (3a first-sale counts,
-3b dead in last 8 weeks, vectorized; predict first: launched-later share and
-dead share), save, ask for review. Then Lesson 2 (benchmark ladder). The plan
+Learner: run Lesson 1 Step 3 from `learn/lesson01_step3.md` (merged Claude + Codex
+code, tested) in `learn/01_eda.ipynb`: tiny practice, 3a first sale, 3b silent series.
+Write the three predictions first, then save and ask for review. Also fix the Step 2
+tiny-test comment (y = 10.0, not 5.0). Then Lesson 2 (benchmark ladder). The plan
 after that (Lessons 3 and 12, skills, VN2 blind attempt with sealed winners'
 files, MVP) is in CLAUDE.md "Current plan". Still open from before: notes on
 D016–D017 (three changes 0.66 → 0.46; why 0.4582 is not a competition win).
