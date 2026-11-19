@@ -23,6 +23,19 @@ These travel with the repo, so they apply on any PC (the per-PC auto-memory does
 - **Skeptical sources:** every rule taken from a book, article, webinar or our own result is tagged with its evidence and cross-checked against an independent source. Four of the five books in `references/` are by Nicolas Vandeput (SupChains is his company), so they do not cross-check each other. Labels: 🟢 strong (2+ independent sources and tested on our data), 🟡 moderate (one source or one dataset), 🔴 hypothesis. Record disagreements; never copy book text, paraphrase with chapter/page.
 - **Long-term goal:** a demand forecasting + inventory optimization SaaS and AI agent the learner can sell to clients, built on VN1 (forecasting) and VN2 (inventory) knowledge. "Beat VN1 1st place" is a post-competition replay (D016) and must never be used as a claim without that caveat.
 
+## Time budget and phases (2026-11-19)
+
+The learner has a full-time job: plan on **~10 hours a week** (more when possible). Split per week: ~7 h learning/building, ~2 h client work (small Upwork jobs, pilots), ~1 h reviewing what Claude built. Consistency over intensity. Claude builds UI/infra; the learner writes the core forecasting/inventory logic.
+
+| Phase | Content | Learner time | Weeks at 10 h |
+|---|---|---|---|
+| 1 | VN1 short course (Lessons 2, 3, 12) + `forecast-eval` skill; DemandPilot Fast/Best mode (port `vn1_fresh`) | ~20 h | ~2 |
+| 2 | VN2 blind attempt (inventory: lead time, censored demand, cost); DemandPilot v0.2: censored demand, cost-based orders, MOQ/case pack | ~45 h | ~4–5 |
+| 3 | AI agent layer: only the needed parts of Ed Donner's courses (LLM API, tool calling, agents, RAG); explanations and exceptions in DemandPilot | ~30 h | ~3 |
+| 4 | Production SaaS (Docker, cloud, Postgres, password reset, billing): only after a real client or pilot | ~30 h | ~3 |
+
+From Phase 1 on, keep ~2 h/week for small paid jobs or free pilots: they become the production experience that client proposals ask for. Product repo: `D:\demandpilot` (separate git repo).
+
 ## Current plan (2026-11-15)
 
 1. `learn/` course, shortened: Lesson 0 metric (done) → 1 data + EDA (Step 3 in progress) → 2 benchmark ladder → 3 backtest and leakage → 12 quantile forecast → safety stock → order quantity. Lessons 4–11 (AMSI, Theta, LightGBM, Tweedie, dormancy, ensemble, pipeline, ablation) are paused and learned just-in-time during VN2.
