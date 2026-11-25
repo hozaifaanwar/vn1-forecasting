@@ -15,6 +15,7 @@ End every working session by updating PROGRESS.md per its own "Session-end rule.
 These travel with the repo, so they apply on any PC (the per-PC auto-memory does not).
 
 - **Language:** reply in Banglish (Bengali in Latin script). Keep small everyday words in English too, not only technical terms: total, average, ratio, sales, week, row, column, check, forecast, error. Bengali only for the connecting grammar.
+- **Code and notebook text in English:** code comments, docstrings and markdown cells inside code/notebooks are always written in English (explanations in chat stay Banglish).
 - **Teaching style:** tiny worked example first (3 series, 5 weeks), then the real numbers. The learner writes the code; give concept, skeleton and hints, then review the saved notebook.
 - **Pace:** fast. Once a concept is understood, move on; no extra drills. At most one prediction question per lesson, only when it teaches something new.
 - **Code style:** teach the professional, vectorized numpy/pandas way, unpacked piece by piece on a tiny matrix. Do not fall back to beginner loops.
